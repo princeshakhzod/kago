@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Panel</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Inter', sans-serif;
+      background: linear-gradient(135deg, rgb(0, 17, 255), #b90000);
+      color: rgb(255, 255, 255);
+      min-height: 100vh;
+      padding: 2rem;
+    }
+    h1 {
+      text-align: center;
+      margin-bottom: 2rem;
+      font-size: 2.5rem;
+      font-weight: 700;
+    }
+    section {
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(35, 43, 34, 0);
+      backdrop-filter: blur(10px);
+      border-radius: 12px;
+      padding: 1.5rem;
+      margin-bottom: 2rem;
+    }
+    section h2 {
+      margin-bottom: 1rem;
+      font-size: 1.6rem;
+      font-weight: 600;
+    }
+    label {
+      display: block;
+      margin-top: 0.8rem;
+      margin-bottom: 0.3rem;
+    }
+    input[type="text"], input[type="file"], select, textarea, input[type="password"] {
+      width: 100%;
+      padding: 0.6rem 0.8rem;
+      border-radius: 8px;
+      border: 1px solid #00ff0d;
+      margin-bottom: 0.8rem;
+      color: #940404;
+    }
+    textarea {
+      min-height: 120px;
+    }
+    .btn {
+      background: #007bff;
+      color: #04f799;
+      border: none;
+      padding: 0.6rem 1.2rem;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+      margin-top: 0.5rem;
+    }
+    .btn:hover { background: #0069d9; }
+    .small {
+      font-size: 0.8rem;
+      opacity: 0.8;
+    }
+    .login-container {
+      max-width: 400px;
+      margin: 100px auto;
+      padding: 2rem;
+      background: rgba(255,255,255,0.1);
+      border-radius: 12px;
+      backdrop-filter: blur(10px);
+    }
+    .admin-section {
+      display: none;
+    }
+    .user-list {
+      margin-top: 1rem;
+    }
+    .user-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.5rem;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+    .user-actions {
+      display: flex;
+      gap: 0.5rem;
+    }
+  </style>
+</head>
+<body>
+  <div id="loginSection" class="login-container">
+    <h2>Admin Kirish</h2>
+    <form id="loginForm">
+      <label for="username">Foydalanuvchi nomi</label>
+      <input type="text" id="username" required>
+      <label for="password">Parol</label>
+      <input type="password" id="password" required>
+      <button type="submit" class="btn">Kirish</button>
+    </form>
+  </div>
+
+  <div id="adminSection" class="admin-section">
+    <h1>Admin Panel</h1>
+
+    <section id="userManagementSection">
+      <h2>Admin Foydalanuvchilarni Boshqarish</h2>
+      <form id="userForm">
+        <label for="newUsername">Yangi foydalanuvchi nomi</label>
+        <input type="text" id="newUsername" required>
+        <label for="newPassword">Parol</label>
+        <input type="password" id="newPassword" required>
+        <button type="submit" class="btn">Foydalanuvchi qo'shish</button>
+      </form>
+      
+      <h3>Mavjud foydalanuvchilar</h3>
+      <div id="userList" class="user-list"></div>
+    </section>
+
+    <section id="addSection">
+      <h2>Yangi dars qo'shish</h2>
+      <form id="lessonForm">
+        <label for="title">Dars sarlavhasi *</label>
+        <input type="text" id="title" required>
+        <label for="content">Matn (ixtiyoriy)</label>
+        <textarea id="content" placeholder="Dars matni yoki nutq testi uchun matn"></textarea>
+        <label for="docInput">Doc/Docx fayl *</label>
+        <input type="file" id="docInput" accept=".doc,.docx" required>
+        <label for="audioInput">Audio fayl (ixtiyoriy)</label>
+        <input type="file" id="audioInput" accept="audio/*">
+        <label for="statusSelect">Dars statusi</label>
+        <select id="statusSelect">
+          <option value="false">Pullik</option>
+          <option value="true">Tekin</option>
+        </select>
+        <button type="submit" class="btn">Darsni saqlash</button>
+      </form>
+    </section>
+    
+    <section id="premiumSection">
+      <h2>Foydalanuvchiga PREMIUM berish</h2>
+      <label for="premiumPhone">Telefon raqami</label>
+      <input type="text" id="premiumPhone" placeholder="998901234567">
+      <button id="premiumGiveBtn" class="btn">PREMIUM berish</button>
+    </section>
+    
+    <section id="plusSection">
+      <h2>Foydalanuvchiga PLUS berish</h2>
+      <label for="plusPhone">Telefon raqami</label>
+      <input type="text" id="plusPhone" placeholder="998901234567">
+      <label for="lessonSelect">Darsni tanlang</label>
+      <select id="lessonSelect">
+        <option value="">-- Darsni tanlang --</option>
+      </select>
+      <button id="plusGiveBtn" class="btn">PLUS berish</button>
+    </section>
+  </div>
+
+  <script>
+    let currentUser = null;
+
+    // Check if user is already logged in
+    async function checkAuth() {
+      const token = localStorage.getItem('adminToken');
+      if (token) {
+        try {
+          const res = await fetch('/api/admin/verify', {
+            headers: {
+              'Authorization': `Bearer ${token}`
+            }
+          });
+          if (res.ok) {
+            const user = await res.json();
+            currentUser = user;
+            showAdminPanel();
+            loadUsers();
+            loadLessonsForSelect();
+          } else {
+            localStorage.removeItem('adminToken');
+          }
+        } catch (e) {
+          localStorage.removeItem('adminToken');
+        }
+      }
+    }
+
+    // Login form handler
+    document.getElementById('loginForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      const username = document.getElementById('username').value.trim();
+      const password = document.getElementById('password').value.trim();
+      
+      if (!username || !password) {
+        alert('Foydalanuvchi nomi va parol kiritilishi kerak');
+        return;
+      }
+
+      try {
+        const res = await fetch('/api/admin/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, password })
+        });
+        
+        const data = await res.json();
+        if (data.success && data.token) {
+          localStorage.setItem('adminToken', data.token);
+          currentUser = data.user;
+          showAdminPanel();
+          loadUsers();
+          loadLessonsForSelect();
+        } else {
+          alert(data.error || 'Kirishda xatolik');
+        }
+      } catch (err) {
+        alert('Serverga ulanishda xatolik');
+      }
+    });
+
+    // Add user form handler
+    document.getElementById('userForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      const username = document.getElementById('newUsername').value.trim();
+      const password = document.getElementById('newPassword').value.trim();
+      
+      if (!username || !password) {
+        alert('Foydalanuvchi nomi va parol kiritilishi kerak');
+        return;
+      }
+
+      try {
+        const token = localStorage.getItem('adminToken');
+        const res = await fetch('/api/admin/users', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({ username, password })
+        });
+        
+        const data = await res.json();
+        if (data.success) {
+          alert('Foydalanuvchi qoʻshildi');
+          document.getElementById('userForm').reset();
+          loadUsers();
+        } else {
+          alert(data.error || 'Xatolik yuz berdi');
+        }
+      } catch (err) {
+        alert('Serverga ulanishda xatolik');
+      }
+    });
+
+    // Load users list
+    async function loadUsers() {
+      try {
+        const token = localStorage.getItem('adminToken');
+        const res = await fetch('/api/admin/users', {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        
+        if (res.ok) {
+          const users = await res.json();
+          renderUsers(users);
+        } else {
+          console.error('Foydalanuvchilarni yuklab boʻlmadi');
+        }
+      } catch (e) {
+        console.error('Foydalanuvchilarni yuklab boʻlmadi', e);
+      }
+    }
+
+    // Render users list
+    function renderUsers(users) {
+      const userList = document.getElementById('userList');
+      userList.innerHTML = '';
+      
+      users.forEach(user => {
+        const userItem = document.createElement('div');
+        userItem.className = 'user-item';
+        userItem.innerHTML = `
+          <span>${user.username}</span>
+          <div class="user-actions">
+            ${user.username !== currentUser.username ? `
+              <button class="btn" onclick="changePassword('${user.username}')">Parolni o'zgartirish</button>
+              <button class="btn" onclick="deleteUser('${user.username}')">O'chirish</button>
+            ` : ''}
+          </div>
+        `;
+        userList.appendChild(userItem);
+      });
+    }
+
+    // Change password
+    async function changePassword(username) {
+      const newPassword = prompt('Yangi parolni kiriting:');
+      if (!newPassword) return;
+      
+      try {
+        const token = localStorage.getItem('adminToken');
+        const res = await fetch('/api/admin/users/password', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({ username, newPassword })
+        });
+        
+        const data = await res.json();
+        if (data.success) {
+          alert('Parol muvaffaqiyatli o\'zgartirildi');
+        } else {
+          alert(data.error || 'Xatolik yuz berdi');
+        }
+      } catch (err) {
+        alert('Serverga ulanishda xatolik');
+      }
+    }
+
+    // Delete user
+    async function deleteUser(username) {
+      if (!confirm(`Haqiqatan ham "${username}" foydalanuvchisini o'chirmoqchimisiz?`)) return;
+      
+      try {
+        const token = localStorage.getItem('adminToken');
+        const res = await fetch('/api/admin/users', {
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({ username })
+        });
+        
+        const data = await res.json();
+        if (data.success) {
+          alert('Foydalanuvchi o\'chirildi');
+          loadUsers();
+        } else {
+          alert(data.error || 'Xatolik yuz berdi');
+        }
+      } catch (err) {
+        alert('Serverga ulanishda xatolik');
+      }
+    }
+
+    // Show admin panel
+    function showAdminPanel() {
+      document.getElementById('loginSection').style.display = 'none';
+      document.getElementById('adminSection').style.display = 'block';
+    }
+
+    // Utility to convert file to data URI
+    function toDataUri(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+    }
+
+    // Load lessons for plus selection
+    async function loadLessonsForSelect() {
+      try {
+        const res = await fetch('/api/lessons');
+        const lessons = await res.json();
+        const select = document.getElementById('lessonSelect');
+        select.innerHTML = '<option value="">-- Darsni tanlang --</option>';
+        lessons.forEach(l => {
+          if (!l.free) {
+            const opt = document.createElement('option');
+            opt.value = l.id;
+            opt.textContent = l.title;
+            select.appendChild(opt);
+          }
+        });
+      } catch (e) {
+        console.error('Darslarni yuklab bo‘lmadi', e);
+      }
+    }
+
+    // Handle lesson form submit
+    document.getElementById('lessonForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      const title = document.getElementById('title').value.trim();
+      const content = document.getElementById('content').value.trim();
+      const docFile = document.getElementById('docInput').files[0];
+      const audioFile = document.getElementById('audioInput').files[0];
+      const free = document.getElementById('statusSelect').value;
+      
+      if (!title || !docFile) {
+        alert('Sarlavha va doc fayl majburiy');
+        return;
+      }
+      
+      try {
+        const formData = new FormData();
+        formData.append('title', title);
+        formData.append('content', content);
+        formData.append('free', free);
+        formData.append('doc', docFile);
+        if (audioFile) {
+          formData.append('audio', audioFile);
+        }
+
+        const token = localStorage.getItem('adminToken');
+        const res = await fetch('/api/lessons', {
+          method: 'POST',
+          headers: { 'x-admin-token': ADMIN_TOKEN },
+          body: formData
+        });
+
+        const data = await res.json();
+        if (data.success) {
+          alert('Dars qo‘shildi');
+          document.getElementById('lessonForm').reset();
+          loadLessonsForSelect();
+        } else if (data.error) {
+          alert(data.error);
+        }
+      } catch (err) {
+        console.error(err);
+        alert('Serverga ulanishda xatolik');
+      }
+    });
+
+    // Grant premium
+    document.getElementById('premiumGiveBtn').addEventListener('click', async () => {
+      const phone = document.getElementById('premiumPhone').value.trim();
+      if (!phone) {
+        alert('Telefon raqamini kiriting');
+        return;
+      }
+      
+      try {
+        const token = localStorage.getItem('adminToken');
+        const res = await fetch('/api/admin/premium', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-admin-token': ADMIN_TOKEN
+          },
+          body: JSON.stringify({ phone })
+        });
+
+        const data = await res.json();
+        if (data.success) {
+          alert('Premium berildi');
+        } else if (data.error) {
+          alert(data.error);
+        }
+      } catch (e) {
+        alert('Xatolik yuz berdi');
+      }
+    });
+
+    // Grant plus
+    document.getElementById('plusGiveBtn').addEventListener('click', async () => {
+      const phone = document.getElementById('plusPhone').value.trim();
+      const lessonId = document.getElementById('lessonSelect').value;
+      if (!phone || !lessonId) {
+        alert('Telefon raqamini va darsni tanlang');
+        return;
+      }
+      
+      try {
+        const token = localStorage.getItem('adminToken');
+        const res = await fetch('/api/admin/plus', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-admin-token': ADMIN_TOKEN
+          },
+          body: JSON.stringify({ phone, lessonId })
+        });
+
+        const data = await res.json();
+        if (data.success) {
+          alert('Plus berildi');
+        } else if (data.error) {
+          alert(data.error);
+        }
+      } catch (e) {
+        alert('Xatolik yuz berdi');
+      }
+    });
+
+    // Initial check
+    checkAuth();
+  </script>
+</body>
+</html>
