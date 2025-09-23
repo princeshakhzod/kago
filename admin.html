@@ -1,0 +1,3187 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KAGO boshqaruv paneli</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Yandex Maps API for selecting branch location.  -->
+    <!-- If you have a personal API key, append it to the URL as apikey=YOUR_KEY. -->
+    <script src="https://api-maps.yandex.ru/2.1/?lang=ru_RU" type="text/javascript"></script>
+    <style>
+        :root {
+            --primary: #4a6bff;
+            --secondary: #ff6b6b;
+            --success: #20c997;
+            --dark: #343a40;
+            --light: #f8f9fa;
+            --gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: #f5f7fa;
+            color: #333;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        /* Login Styles */
+        .login-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: var(--gradient);
+        }
+        
+        .login-box {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+        }
+        
+        .login-box h2 {
+            margin-bottom: 20px;
+            color: var(--primary);
+        }
+        
+        .input-group {
+            margin-bottom: 20px;
+            position: relative;
+        }
+        
+        .input-group label {
+            display: block;
+            text-align: left;
+            margin-bottom: 5px;
+            font-weight: 500;
+        }
+        
+        .input-group input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+            transition: all 0.3s;
+        }
+        
+        .input-group input:focus {
+            border-color: var(--primary);
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(74, 107, 255, 0.2);
+        }
+        
+        .password-toggle {
+            position: absolute;
+            right: 10px;
+            top: 35px;
+            cursor: pointer;
+            color: #777;
+        }
+        
+        .btn {
+            display: inline-block;
+            padding: 12px 25px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 500;
+            transition: all 0.3s;
+            text-decoration: none;
+        }
+        
+        .btn:hover {
+            background: #3a5bef;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        .btn-block {
+            display: block;
+            width: 100%;
+        }
+        
+        /* Admin Panel Styles */
+        .admin-header {
+            background: white;
+            padding: 15px 20px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .admin-header h1 {
+            color: var(--primary);
+            font-size: 24px;
+        }
+        
+        .admin-nav {
+            display: flex;
+            background: white;
+            border-radius: 5px;
+            overflow: hidden;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+        
+        .nav-item {
+            padding: 15px 20px;
+            cursor: pointer;
+            text-align: center;
+            flex: 1;
+            transition: all 0.3s;
+            border-bottom: 3px solid transparent;
+        }
+        
+        .nav-item:hover {
+            background: #f8f9fa;
+        }
+        
+        .nav-item.active {
+            border-bottom: 3px solid var(--primary);
+            color: var(--primary);
+            font-weight: 500;
+        }
+        
+        .nav-item i {
+            margin-right: 8px;
+        }
+        
+        .content-section {
+            display: none;
+            background: white;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+        
+        .content-section.active {
+            display: block;
+        }
+        
+        .section-title {
+            margin-bottom: 20px;
+            color: var(--primary);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+        }
+        
+        .form-control {
+            width: 100%;
+            padding: 10px 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        
+        .form-control:focus {
+            border-color: var(--primary);
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(74, 107, 255, 0.2);
+        }
+        
+        .form-row {
+            display: flex;
+            gap: 15px;
+        }
+        
+        .form-row .form-group {
+            flex: 1;
+        }
+        
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        
+        .checkbox-group input {
+            margin-right: 10px;
+        }
+        
+        .btn-success {
+            background: var(--success);
+        }
+        
+        .btn-danger {
+            background: var(--secondary);
+        }
+        
+        .btn-success:hover {
+            background: #1aa179;
+        }
+        
+        .btn-danger:hover {
+            background: #e05a5a;
+        }
+        
+        .table-responsive {
+            overflow-x: auto;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        
+        table th, table td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        table th {
+            background: #f8f9fa;
+            font-weight: 500;
+        }
+        
+        table tr:hover {
+            background: #f8f9fa;
+        }
+        
+        .badge {
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        
+        .badge-success {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .badge-warning {
+            background: #fff3cd;
+            color: #856404;
+        }
+        
+        .badge-danger {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        
+        .action-btn {
+            padding: 5px 10px;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+            margin-right: 5px;
+            font-size: 14px;
+        }
+        
+        .action-btn.edit {
+            background: #ffc107;
+            color: #212529;
+        }
+        
+        .action-btn.delete {
+            background: #dc3545;
+            color: white;
+        }
+        
+        .variant-item {
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 10px;
+            position: relative;
+        }
+        
+        .remove-variant {
+            position: absolute;
+            right: 10px;
+            top: 10px;
+            color: #dc3545;
+            cursor: pointer;
+        }
+        
+        .stats-tabs {
+            display: flex;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        .stats-tab {
+            padding: 10px 20px;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+        }
+        
+        .stats-tab.active {
+            border-bottom: 2px solid var(--primary);
+            color: var(--primary);
+            font-weight: 500;
+        }
+        
+        .chart-container {
+            height: 300px;
+            margin-bottom: 30px;
+        }
+        
+        .user-list {
+            list-style: none;
+        }
+        
+        .user-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .user-item:hover {
+            background: #f8f9fa;
+        }
+        
+        .user-info {
+            display: flex;
+            align-items: center;
+        }
+        
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--primary);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 15px;
+            font-weight: bold;
+        }
+        
+        .user-stats {
+            color: #6c757d;
+            font-size: 14px;
+        }
+        
+        .credentials-list {
+            list-style: none;
+        }
+        
+        .credential-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .credential-item:hover {
+            background: #f8f9fa;
+        }
+        
+        .credential-actions {
+            display: flex;
+            gap: 10px;
+        }
+        
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            overflow-y: auto;
+        }
+        
+        .modal-content {
+            background-color: #fff;
+            margin: 50px auto;
+            padding: 20px;
+            border-radius: 5px;
+            width: 100%;
+            max-width: 600px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+        
+        .close-modal {
+            font-size: 24px;
+            font-weight: bold;
+            color: #aaa;
+            cursor: pointer;
+        }
+        
+        .close-modal:hover {
+            color: #333;
+        }
+
+        /* Custom width for the map modal to better accommodate the map */
+        #mapModal .modal-content {
+            max-width: 800px;
+        }
+        
+        /* Responsive Styles */
+        @media (max-width: 768px) {
+            .admin-nav {
+                flex-direction: column;
+            }
+            
+            .nav-item {
+                padding: 12px;
+                border-bottom: 1px solid #eee;
+                border-left: 3px solid transparent;
+            }
+            
+            .nav-item.active {
+                border-bottom: 1px solid #eee;
+                border-left: 3px solid var(--primary);
+            }
+            
+            .form-row {
+                flex-direction: column;
+                gap: 0;
+            }
+            
+            .admin-header {
+                flex-direction: column;
+                gap: 10px;
+                align-items: flex-start;
+            }
+            
+            .section-title {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
+            
+            .modal-content {
+                margin: 20px auto;
+                width: 95%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Login Section -->
+    <div class="login-container" id="loginSection">
+        <div class="login-box">
+            <h2><i class="fas fa-lock"></i> KAGO</h2>
+            <form id="loginForm">
+                <div class="input-group">
+                    <label for="login">Login</label>
+                    <input type="text" id="login" placeholder="Loginingizni kiriting" required>
+                </div>
+                <div class="input-group">
+                    <label for="password">Parol</label>
+                    <input type="password" id="password" placeholder="Parolingizni kiriting" required>
+                    <i class="fas fa-eye password-toggle" id="togglePassword"></i>
+                </div>
+                <button type="submit" class="btn btn-block">Kirish</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Admin Panel -->
+    <div class="admin-panel" id="adminPanel" style="display: none;">
+        <div class="admin-header">
+            <h1><i class="fas fa-utensils"></i> Boshqaruv Paneli</h1>
+            <button class="btn btn-danger" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> Chiqish</button>
+        </div>
+
+        <div class="container">
+            <div class="admin-nav">
+                <div class="nav-item active" data-section="restaurants"><i class="fas fa-store"></i> Filiallar</div>
+                <div class="nav-item" data-section="dishes"><i class="fas fa-hamburger"></i> Mahsulotlar</div>
+                <div class="nav-item" data-section="containers"><i class="fas fa-box-open"></i> Idishlar</div>
+                <div class="nav-item" data-section="workhours"><i class="fas fa-clock"></i> Ish Vaqti</div>
+                <div class="nav-item" data-section="promocodes"><i class="fas fa-tags"></i> Promo Kodlar</div>
+                <div class="nav-item" data-section="stats"><i class="fas fa-chart-bar"></i> Statistika</div>
+                <div class="nav-item" data-section="branchtypes"><i class="fas fa-layer-group"></i> Filial turlari</div>
+                <div class="nav-item" data-section="categories"><i class="fas fa-th-list"></i> Taom kategoriyalari</div>
+                <div class="nav-item" data-section="slides"><i class="fas fa-images"></i> Slayder rasmlar</div>
+                <div class="nav-item" data-section="credentials"><i class="fas fa-user-shield"></i> Login va parollar</div>
+            </div>
+
+            <!-- Restaurants Section -->
+            <div class="content-section active" id="restaurantsSection">
+                <div class="section-title">
+                    <h2><i class="fas fa-store"></i> Filiallar</h2>
+                    <button class="btn" id="addRestaurantBtn"><i class="fas fa-plus"></i> Yangi Filial</button>
+                </div>
+                
+                <div class="table-responsive">
+                    <table id="restaurantsTable">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Nomi</th>
+                                <th>Tavsif</th>
+                                <th>Holati</th>
+                                <th>Harakatlar</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Restaurants will be loaded here -->
+                        </tbody>
+                    </table>
+                </div>
+                
+                <!-- Add/Edit Restaurant Form -->
+                <div class="modal" id="restaurantModal">
+                    <div class="modal-content">
+                        <div class="section-title">
+                            <h2 id="restaurantModalTitle"><i class="fas fa-store"></i> Filial Qo'shish</h2>
+                            <span class="close-modal">&times;</span>
+                        </div>
+                        <form id="restaurantForm">
+                            <input type="hidden" id="restaurantId">
+                            <div class="form-group">
+                                <label for="restaurantName">Filial Nomi</label>
+                                <input type="text" class="form-control" id="restaurantName" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="restaurantDesc">Tavsif</label>
+                                <textarea class="form-control" id="restaurantDesc" rows="3"></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label for="restaurantImage">Rasm</label>
+                                <input type="file" class="form-control" id="restaurantImage" accept="image/*">
+                                <div id="restaurantImagePreview" style="margin-top: 10px;"></div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="restaurantLat">Kenglik (Latitude)</label>
+                                    <input type="text" class="form-control" id="restaurantLat">
+                                </div>
+                                <div class="form-group">
+                                    <label for="restaurantLng">Uzunlik (Longitude)</label>
+                                    <input type="text" class="form-control" id="restaurantLng">
+                                </div>
+                            </div>
+                            <!-- Button to select coordinates from map -->
+                            <div class="form-group">
+                                <button type="button" class="btn" id="selectOnMapBtn">
+                                    <i class="fas fa-map-marker-alt"></i> Xaritadan tanlash
+                                </button>
+                            </div>
+                            <div class="form-group">
+                                <label for="restaurantBranchType">Filial turi</label>
+                                <select class="form-control" id="restaurantBranchType">
+                                    <!-- Branch types will be loaded here -->
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="restaurantActive">Holati</label>
+                                <select class="form-control" id="restaurantActive">
+                                    <option value="true">Faol</option>
+                                    <option value="false">Nofaol</option>
+                                </select>
+                            </div>
+
+            <!-- Branch working hours (start and end times).  These inputs
+                 allow administrators to specify daily opening hours for
+                 each branch.  If both fields are left blank the branch
+                 will be considered open all day. -->
+            <div class="form-group">
+                <label for="restaurantStartTime">Ish boshlanish vaqti</label>
+                <input type="time" class="form-control" id="restaurantStartTime">
+            </div>
+            <div class="form-group">
+                <label for="restaurantEndTime">Ish tugash vaqti</label>
+                <input type="time" class="form-control" id="restaurantEndTime">
+            </div>
+                            <div class="form-group">
+                                <button type="submit" class="btn btn-block">Saqlash</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Map Selection Modal -->
+                <div class="modal" id="mapModal">
+                    <div class="modal-content">
+                        <div class="section-title">
+                            <h2><i class="fas fa-map-marker-alt"></i> Lokatsiyani tanlash</h2>
+                            <span class="close-modal" onclick="closeModal('mapModal')">&times;</span>
+                        </div>
+                        <div id="yandexMap" style="width: 100%; height: 400px;"></div>
+                        <div style="margin-top: 15px; display: flex; justify-content: flex-end; gap: 10px;">
+                            <button type="button" class="btn btn-danger" id="cancelMapBtn">Bekor qilish</button>
+                            <button type="button" class="btn btn-success" id="confirmMapBtn">OK</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Dishes Section -->
+            <div class="content-section" id="dishesSection">
+                <div class="section-title" style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+                    <h2 style="margin-right: auto;"><i class="fas fa-hamburger"></i> Mahsulotlar</h2>
+                    <!-- Search input to filter dishes by name.  Typing will immediately filter the
+                         table below. -->
+                    <input type="text" id="dishSearch" class="form-control" placeholder="Mahsulotni qidirish..." style="max-width: 220px;">
+                    <button class="btn" id="addDishBtn"><i class="fas fa-plus"></i> Yangi Mahsulot</button>
+                </div>
+                
+                <div class="table-responsive">
+                    <table id="dishesTable">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Nomi</th>
+                                <th>Filial</th>
+                                <th>Narxi</th>
+                                <th>Holati</th>
+                                <th>Harakatlar</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Dishes will be loaded here -->
+                        </tbody>
+                    </table>
+                </div>
+                
+                <!-- Add/Edit Dish Form -->
+                <div class="modal" id="dishModal">
+                    <div class="modal-content">
+                        <div class="section-title">
+                            <h2 id="dishModalTitle"><i class="fas fa-hamburger"></i> Mahsulot Qo'shish</h2>
+                            <span class="close-modal">&times;</span>
+                        </div>
+                        <form id="dishForm">
+                            <input type="hidden" id="dishId">
+                            <div class="form-group">
+                                <label for="dishName">Mahsulot Nomi</label>
+                                <input type="text" class="form-control" id="dishName" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="dishDesc">Tavsif</label>
+                                <textarea class="form-control" id="dishDesc" rows="3"></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label for="dishPrice">Asosiy Narxi</label>
+                                <input type="number" class="form-control" id="dishPrice" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="dishImage">Rasm</label>
+                                <input type="file" class="form-control" id="dishImage" accept="image/*">
+                                <div id="dishImagePreview" style="margin-top: 10px;"></div>
+                            </div>
+                            <div class="form-group">
+                                <label for="dishCategory">Kategoriya</label>
+                                <select class="form-control" id="dishCategory">
+                                    <!-- Categories will be loaded here -->
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="dishRestaurant">Filial</label>
+                                <select class="form-control" id="dishRestaurant" required>
+                                    <!-- Restaurants will be loaded here -->
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Idishlar</label>
+                                <div id="dishContainers">
+                                    <!-- Containers will be loaded here as checkboxes -->
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label>Variantlar</label>
+                                <div id="dishVariants">
+                                    <!-- Variants will be added here -->
+                                </div>
+                                <button type="button" class="btn" id="addVariantBtn" style="margin-top: 10px;">
+                                    <i class="fas fa-plus"></i> Variant Qo'shish
+                                </button>
+                            </div>
+                            <div class="form-group">
+                                <button type="submit" class="btn btn-block">Saqlash</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Containers Section -->
+            <div class="content-section" id="containersSection">
+                <div class="section-title">
+                    <h2><i class="fas fa-box-open"></i> Idishlar</h2>
+                    <button class="btn" id="addContainerBtn"><i class="fas fa-plus"></i> Yangi Idish</button>
+                </div>
+                
+                <div class="table-responsive">
+                    <table id="containersTable">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Nomi</th>
+                                <th>Narxi</th>
+                                <th>Holati</th>
+                                <th>Harakatlar</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Containers will be loaded here -->
+                        </tbody>
+                    </table>
+                </div>
+                
+                <!-- Add/Edit Container Form -->
+                <div class="modal" id="containerModal">
+                    <div class="modal-content">
+                        <div class="section-title">
+                            <h2 id="containerModalTitle"><i class="fas fa-box-open"></i> Idish Qo'shish</h2>
+                            <span class="close-modal">&times;</span>
+                        </div>
+                        <form id="containerForm">
+                            <input type="hidden" id="containerId">
+                            <div class="form-group">
+                                <label for="containerName">Idish Nomi</label>
+                                <input type="text" class="form-control" id="containerName" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="containerPrice">Narxi</label>
+                                <input type="number" class="form-control" id="containerPrice" required>
+                            </div>
+                            <div class="form-group">
+                                <button type="submit" class="btn btn-block">Saqlash</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Work Hours Section -->
+            <div class="content-section" id="workhoursSection">
+                <div class="section-title">
+                    <h2><i class="fas fa-clock"></i> Ish Vaqti</h2>
+                </div>
+                <form id="workHoursForm">
+                    <!-- For each day of the week, provide start and end time inputs -->
+                    <div class="form-group">
+                        <label>Dushanba</label>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Boshlanish vaqti</label>
+                                <input type="time" class="form-control" id="mondayStart">
+                            </div>
+                            <div class="form-group">
+                                <label>Tugash vaqti</label>
+                                <input type="time" class="form-control" id="mondayEnd">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Seshanba</label>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Boshlanish vaqti</label>
+                                <input type="time" class="form-control" id="tuesdayStart">
+                            </div>
+                            <div class="form-group">
+                                <label>Tugash vaqti</label>
+                                <input type="time" class="form-control" id="tuesdayEnd">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Chorshanba</label>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Boshlanish vaqti</label>
+                                <input type="time" class="form-control" id="wednesdayStart">
+                            </div>
+                            <div class="form-group">
+                                <label>Tugash vaqti</label>
+                                <input type="time" class="form-control" id="wednesdayEnd">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Payshanba</label>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Boshlanish vaqti</label>
+                                <input type="time" class="form-control" id="thursdayStart">
+                            </div>
+                            <div class="form-group">
+                                <label>Tugash vaqti</label>
+                                <input type="time" class="form-control" id="thursdayEnd">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Juma</label>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Boshlanish vaqti</label>
+                                <input type="time" class="form-control" id="fridayStart">
+                            </div>
+                            <div class="form-group">
+                                <label>Tugash vaqti</label>
+                                <input type="time" class="form-control" id="fridayEnd">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Shanba</label>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Boshlanish vaqti</label>
+                                <input type="time" class="form-control" id="saturdayStart">
+                            </div>
+                            <div class="form-group">
+                                <label>Tugash vaqti</label>
+                                <input type="time" class="form-control" id="saturdayEnd">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Yakshanba</label>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Boshlanish vaqti</label>
+                                <input type="time" class="form-control" id="sundayStart">
+                            </div>
+                            <div class="form-group">
+                                <label>Tugash vaqti</label>
+                                <input type="time" class="form-control" id="sundayEnd">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <button type="submit" class="btn btn-block">Saqlash</button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Promocodes Section -->
+            <div class="content-section" id="promocodesSection">
+                <div class="section-title">
+                    <h2><i class="fas fa-tags"></i> Promo Kodlar</h2>
+                    <button class="btn" id="addPromocodeBtn"><i class="fas fa-plus"></i> Yangi Promo Kod</button>
+                </div>
+                
+                <div class="table-responsive">
+                    <table id="promocodesTable">
+                        <thead>
+                            <tr>
+                                <th>Kod</th>
+                                <th>Minimal Summa</th>
+                                <th>Chegirma</th>
+                                <th>Harakatlar</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Promocodes will be loaded here -->
+                        </tbody>
+                    </table>
+                </div>
+                
+                <!-- Add/Edit Promocode Form -->
+                <div class="modal" id="promocodeModal">
+                    <div class="modal-content">
+                        <div class="section-title">
+                            <h2 id="promocodeModalTitle"><i class="fas fa-tags"></i> Promo Kod Qo'shish</h2>
+                            <span class="close-modal">&times;</span>
+                        </div>
+                        <form id="promocodeForm">
+                            <div class="form-group">
+                                <label for="promocodeCode">Promo Kod</label>
+                                <input type="text" class="form-control" id="promocodeCode" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="promocodeMinSum">Minimal Summa</label>
+                                <input type="number" class="form-control" id="promocodeMinSum" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="promocodeDiscount">Chegirma Miqdori</label>
+                                <input type="number" class="form-control" id="promocodeDiscount" required>
+                            </div>
+                            <div class="form-group">
+                                <button type="submit" class="btn btn-block">Saqlash</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Stats Section -->
+            <div class="content-section" id="statsSection">
+                <div class="section-title">
+                    <h2><i class="fas fa-chart-bar"></i> Statistika</h2>
+                </div>
+                
+                <div class="stats-tabs">
+                    <div class="stats-tab active" data-stats="today">Bugun</div>
+                    <div class="stats-tab" data-stats="week">Oxirgi 7 kun</div>
+                    <div class="stats-tab" data-stats="month">Oxirgi 31 kun</div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <div class="chart-container">
+                            <h3><i class="fas fa-money-bill-wave"></i> Daromad</h3>
+                            <div id="revenueChart">
+                                <!-- Revenue chart will be rendered here -->
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="chart-container">
+                            <h3><i class="fas fa-store"></i> Filiallar statistikasi</h3>
+                            <div id="restaurantsChart">
+                                <!-- Restaurants chart will be rendered here -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <h3><i class="fas fa-utensils"></i> Eng Ko'p Sotilgan Mahsulotlar</h3>
+                <div class="chart-container" id="topDishesChart">
+                    <!-- Chart will be rendered here -->
+                </div>
+                
+                <h3><i class="fas fa-users"></i> Eng Faol Mijozlar</h3>
+                <ul class="user-list" id="topUsersList">
+                    <!-- Top users will be loaded here -->
+                </ul>
+            </div>
+
+            <!-- Branch Types Section -->
+            <div class="content-section" id="branchtypesSection">
+                <div class="section-title">
+                    <h2><i class="fas fa-layer-group"></i> Filial turlari</h2>
+                    <button class="btn" id="addBranchTypeBtn"><i class="fas fa-plus"></i> Yangi qo'shish</button>
+                </div>
+                <div class="table-responsive">
+                    <table id="branchtypesTable">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Nomi</th>
+                                <th>Rasm</th>
+                                <th>Holati</th>
+                                <th>Harakatlar</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Branch types will be loaded here -->
+                        </tbody>
+                    </table>
+                </div>
+                <!-- Add/Edit Branch Type Modal -->
+                <div class="modal" id="branchTypeModal">
+                    <div class="modal-content">
+                        <div class="section-title">
+                            <h2 id="branchTypeModalTitle"><i class="fas fa-layer-group"></i> Filial turi qo'shish</h2>
+                            <span class="close-modal">&times;</span>
+                        </div>
+                        <form id="branchTypeForm">
+                            <input type="hidden" id="branchTypeId">
+                            <div class="form-group">
+                                <label for="branchTypeName">Nomi</label>
+                                <input type="text" class="form-control" id="branchTypeName" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="branchTypeImage">Rasm</label>
+                                <input type="file" class="form-control" id="branchTypeImage" accept="image/*">
+                                <div id="branchTypeImagePreview" style="margin-top: 10px;"></div>
+                            </div>
+                            <div class="form-group">
+                                <label for="branchTypeActive">Holati</label>
+                                <select class="form-control" id="branchTypeActive">
+                                    <option value="true">Faol</option>
+                                    <option value="false">Nofaol</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <button type="submit" class="btn btn-block">Saqlash</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Categories Section -->
+            <div class="content-section" id="categoriesSection">
+                <div class="section-title">
+                    <h2><i class="fas fa-th-list"></i> Taom kategoriyalari</h2>
+                    <button class="btn" id="addCategoryBtn"><i class="fas fa-plus"></i> Yangi qo'shish</button>
+                </div>
+                <div class="table-responsive">
+                    <table id="categoriesTable">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Nomi</th>
+                                <th>Rasm</th>
+                                <th>Holati</th>
+                                <th>Harakatlar</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Categories will be loaded here -->
+                        </tbody>
+                    </table>
+                </div>
+                <!-- Add/Edit Category Modal -->
+                <div class="modal" id="categoryModal">
+                    <div class="modal-content">
+                        <div class="section-title">
+                            <h2 id="categoryModalTitle"><i class="fas fa-th-list"></i> Kategoriya qo'shish</h2>
+                            <span class="close-modal">&times;</span>
+                        </div>
+                        <form id="categoryForm">
+                            <input type="hidden" id="categoryId">
+                            <div class="form-group">
+                                <label for="categoryName">Kategoriya nomi</label>
+                                <input type="text" class="form-control" id="categoryName" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="categoryImage">Rasm</label>
+                                <input type="file" class="form-control" id="categoryImage" accept="image/*">
+                                <div id="categoryImagePreview" style="margin-top: 10px;"></div>
+                            </div>
+                            <div class="form-group">
+                                <label for="categoryActive">Holati</label>
+                                <select class="form-control" id="categoryActive">
+                                    <option value="true">Faol</option>
+                                    <option value="false">Nofaol</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <button type="submit" class="btn btn-block">Saqlash</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Slides Section -->
+            <div class="content-section" id="slidesSection">
+                <div class="section-title">
+                    <h2><i class="fas fa-images"></i> Slayder rasmlar</h2>
+                    <button class="btn" id="addSlideBtn"><i class="fas fa-plus"></i> Yangi qo'shish</button>
+                </div>
+                <div class="table-responsive">
+                    <table id="slidesTable">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Rasm</th>
+                                <th>Tugash vaqti</th>
+                                <th>Harakatlar</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Slides will be loaded here -->
+                        </tbody>
+                    </table>
+                </div>
+                <!-- Add/Edit Slide Modal -->
+                <div class="modal" id="slideModal">
+                    <div class="modal-content">
+                        <div class="section-title">
+                            <h2 id="slideModalTitle"><i class="fas fa-images"></i> Slayder qo'shish</h2>
+                            <span class="close-modal">&times;</span>
+                        </div>
+                        <form id="slideForm">
+                            <input type="hidden" id="slideId">
+                            <div class="form-group">
+                                <label for="slideImage">Rasm</label>
+                                <input type="file" class="form-control" id="slideImage" accept="image/*">
+                                <div id="slideImagePreview" style="margin-top: 10px;"></div>
+                            </div>
+                            <div class="form-group">
+                                <label for="slideExpire">Tugash sanasi va vaqti</label>
+                                <input type="datetime-local" class="form-control" id="slideExpire">
+                            </div>
+                            <div class="form-group">
+                                <button type="submit" class="btn btn-block">Saqlash</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Credentials Section -->
+            <div class="content-section" id="credentialsSection">
+                <div class="section-title">
+                    <h2><i class="fas fa-user-shield"></i> Login va parollar</h2>
+                    <button class="btn" id="addCredentialBtn"><i class="fas fa-plus"></i> Yangi Qo'shish</button>
+                </div>
+                
+                <ul class="credentials-list" id="credentialsList">
+                    <!-- Credentials will be loaded here -->
+                </ul>
+                
+                <!-- Add/Edit Credential Form -->
+                <div class="modal" id="credentialModal">
+                    <div class="modal-content">
+                        <div class="section-title">
+                            <h2 id="credentialModalTitle"><i class="fas fa-user-shield"></i> Yangi login, parol qo'shish</h2>
+                            <span class="close-modal">&times;</span>
+                        </div>
+                        <form id="credentialForm">
+                            <input type="hidden" id="credentialId">
+                            <div class="form-group">
+                                <label for="credentialLogin">Login</label>
+                                <input type="text" class="form-control" id="credentialLogin" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="credentialPassword">Parol</label>
+                                <input type="password" class="form-control" id="credentialPassword" required>
+                                <i class="fas fa-eye password-toggle" id="toggleCredentialPassword"></i>
+                            </div>
+                            <div class="form-group">
+                                <label for="credentialRestaurant">Filial</label>
+                                <select class="form-control" id="credentialRestaurant">
+                                    <option value="">-- Umumiy admin --</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <button type="submit" class="btn btn-block">Saqlash</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // API Base URL
+        const API_BASE_URL = '/api';
+        
+        // DOM Elements
+        const loginSection = document.getElementById('loginSection');
+        const adminPanel = document.getElementById('adminPanel');
+        const loginForm = document.getElementById('loginForm');
+        const logoutBtn = document.getElementById('logoutBtn');
+        const togglePassword = document.getElementById('togglePassword');
+        const passwordInput = document.getElementById('password');
+        const navItems = document.querySelectorAll('.nav-item');
+        const contentSections = document.querySelectorAll('.content-section');
+
+        // Holds information about the currently authenticated user. The server
+        // returns an object with at least an `id`, `login` and optional
+        // `restaurantId` field. If `restaurantId` is defined the user is a
+        // branch‑level administrator and only has access to their own branch.
+        let currentUser = null;
+
+        // Globally store all dishes retrieved from the server so that we can
+        // perform client‑side searches without repeatedly hitting the API.  This
+        // array is updated in loadDishes() and referenced when filtering by
+        // search term.
+        let loadedDishes = [];
+        // Globally store restaurants list to map dish.restaurant_id to a name.
+        // This is populated alongside loadedDishes in loadDishes().
+        let loadedRestaurants = [];
+
+        // Per‑branch opening hours retrieved from the server.  Each key
+        // corresponds to a restaurant ID and maps to an object with
+        // `start` and `end` properties.  If a branch is missing from
+        // this object it is considered to be open all day.
+        let branchTimes = {};
+
+        // Fetch the branch opening hours from the API.  The returned
+        // object is stored in the global `branchTimes` variable.  If
+        // the request fails the variable remains an empty object.
+        async function fetchBranchTimes() {
+            try {
+                const resp = await fetch(`${API_BASE_URL}/branchtimes`, { credentials: 'include' });
+                branchTimes = await resp.json();
+            } catch (err) {
+                console.error('Failed to load branch times:', err);
+                branchTimes = {};
+            }
+        }
+        
+        // Modal elements
+        const modals = document.querySelectorAll('.modal');
+        const closeModalButtons = document.querySelectorAll('.close-modal');
+        
+        // Initialize authentication on page load.  
+        // We first verify whether the admin has already authenticated within the current tab.
+        // If yes, we simply call the server-side auth check to restore the session; otherwise we show
+        // the login page.  Using sessionStorage means the flag only persists until the tab is closed,
+        // so a full refresh (Ctrl+Shift+R) will not trigger another password prompt.
+        document.addEventListener('DOMContentLoaded', function() {
+            initAuth();
+        });
+
+        /**
+         * Initializes the authentication state.  
+         * When the admin first visits the panel in a new tab, they must log in.  
+         * Once logged in, a flag is stored in sessionStorage so that a hard reload (Ctrl+Shift+R) 
+         * does not prompt again, but closing the tab clears the flag and requires re‑entry on next visit.
+         */
+        function initAuth() {
+            const isAuthenticated = sessionStorage.getItem('admin-authenticated');
+            if (isAuthenticated) {
+                // User has already provided their password in this tab, verify server session
+                checkAuthStatus();
+            } else {
+                // No flag present, ensure admin panel is hidden and show login form
+                loginSection.style.display = 'flex';
+                adminPanel.style.display = 'none';
+            }
+        }
+        
+        // Check if user is authenticated
+        async function checkAuthStatus() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/check-auth`, {
+                    credentials: 'include'
+                });
+                
+                if (response.ok) {
+                    // Server session is valid; fetch the current user profile to
+                    // determine the user’s role. If fetching fails we still
+                    // proceed with a null currentUser.
+                    try {
+                        const meRes = await fetch(`${API_BASE_URL}/me`, { credentials: 'include' });
+                        if (meRes.ok) {
+                            currentUser = await meRes.json();
+                        } else {
+                            currentUser = null;
+                        }
+                    } catch (_) {
+                        currentUser = null;
+                    }
+                    // Display the admin panel and adjust UI according to role
+                    loginSection.style.display = 'none';
+                    adminPanel.style.display = 'block';
+                    adjustUIForUserRole();
+                    loadInitialData();
+                } else {
+                    // Session on server expired or invalid; force re‑login and clear session flag
+                    sessionStorage.removeItem('admin-authenticated');
+                    loginSection.style.display = 'flex';
+                    adminPanel.style.display = 'none';
+                }
+            } catch (error) {
+                console.error('Auth check failed:', error);
+                // On error treat as unauthenticated and show login
+                sessionStorage.removeItem('admin-authenticated');
+                loginSection.style.display = 'flex';
+                adminPanel.style.display = 'none';
+            }
+        }
+
+        /**
+         * Adjust the admin interface according to the current user's role. If
+         * the user is associated with a specific restaurant (i.e., has a
+         * `restaurantId` property) then they are considered a branch‑level
+         * administrator. Branch admins have restricted access: only the
+         * Restaurants (for their own branch), Dishes and Containers sections
+         * are visible. All other navigation items are hidden. This function
+         * should be invoked after currentUser has been populated.
+         */
+        function adjustUIForUserRole() {
+            // If no user or no restaurantId, treat as full admin
+            if (!currentUser || currentUser.restaurantId === null || currentUser.restaurantId === undefined) {
+                return;
+            }
+            const allowed = ['restaurants', 'dishes', 'containers'];
+            // Hide disallowed navigation items
+            navItems.forEach(item => {
+                const section = item.getAttribute('data-section');
+                if (!allowed.includes(section)) {
+                    item.style.display = 'none';
+                }
+            });
+            // Ensure one of the visible nav items is active; if the currently
+            // active nav is hidden then activate the first allowed section.
+            let activeNav = document.querySelector('.nav-item.active');
+            if (!activeNav || activeNav.style.display === 'none') {
+                for (const item of navItems) {
+                    if (item.style.display !== 'none') {
+                        navItems.forEach(nav => nav.classList.remove('active'));
+                        item.classList.add('active');
+                        const targetSection = item.getAttribute('data-section') + 'Section';
+                        contentSections.forEach(section => {
+                            if (section.id === targetSection) {
+                                section.classList.add('active');
+                            } else {
+                                section.classList.remove('active');
+                            }
+                        });
+                        break;
+                    }
+                }
+            }
+            // Hide the ability to add new restaurants for branch admins
+            const addRestaurantBtn = document.getElementById('addRestaurantBtn');
+            if (addRestaurantBtn) {
+                addRestaurantBtn.style.display = 'none';
+            }
+        }
+        
+        // Login functionality
+        loginForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const login = document.getElementById('login').value;
+            const password = document.getElementById('password').value;
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ login, password }),
+                    credentials: 'include'
+                });
+                
+                if (response.ok) {
+                    // Mark this tab as authenticated so that subsequent page reloads do not prompt again.
+                    sessionStorage.setItem('admin-authenticated', 'true');
+                    // Fetch the user profile to determine role
+                    try {
+                        const meRes = await fetch(`${API_BASE_URL}/me`, { credentials: 'include' });
+                        if (meRes.ok) {
+                            currentUser = await meRes.json();
+                        } else {
+                            currentUser = null;
+                        }
+                    } catch (_) {
+                        currentUser = null;
+                    }
+                    loginSection.style.display = 'none';
+                    adminPanel.style.display = 'block';
+                    adjustUIForUserRole();
+                    loadInitialData();
+                } else {
+                    alert('Noto\'g\'ri login yoki parol!');
+                }
+            } catch (error) {
+                console.error('Login failed:', error);
+                alert('Xatolik yuz berdi. Iltimos, qayta urinib ko\'ring.');
+            }
+        });
+        
+        // Toggle password visibility
+        togglePassword.addEventListener('click', function() {
+            const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+            passwordInput.setAttribute('type', type);
+            this.classList.toggle('fa-eye-slash');
+        });
+        
+        // Logout functionality
+        logoutBtn.addEventListener('click', async function() {
+            try {
+                await fetch(`${API_BASE_URL}/logout`, {
+                    method: 'POST',
+                    credentials: 'include'
+                });
+                
+                adminPanel.style.display = 'none';
+                loginSection.style.display = 'flex';
+                loginForm.reset();
+                // Remove the session flag so next tab visit requires authentication again
+                sessionStorage.removeItem('admin-authenticated');
+            } catch (error) {
+                console.error('Logout failed:', error);
+            }
+        });
+        
+        // Navigation
+        navItems.forEach(item => {
+            item.addEventListener('click', function() {
+                navItems.forEach(nav => nav.classList.remove('active'));
+                this.classList.add('active');
+                
+                const sectionId = this.getAttribute('data-section') + 'Section';
+                contentSections.forEach(section => {
+                    section.classList.remove('active');
+                    if (section.id === sectionId) {
+                        section.classList.add('active');
+                    }
+                });
+                
+                // Load specific section data if needed
+                switch(sectionId) {
+                    case 'restaurantsSection':
+                        loadRestaurants();
+                        break;
+                    case 'dishesSection':
+                        loadDishes();
+                        break;
+                    case 'containersSection':
+                        loadContainers();
+                        break;
+                    case 'workhoursSection':
+                        loadWorkHours();
+                        break;
+                    case 'promocodesSection':
+                        loadPromocodes();
+                        break;
+                    case 'statsSection':
+                        loadStats();
+                        break;
+                    case 'branchtypesSection':
+                        loadBranchTypes();
+                        break;
+                    case 'categoriesSection':
+                        loadCategories();
+                        break;
+                    case 'slidesSection':
+                        loadSlides();
+                        break;
+                    case 'credentialsSection':
+                        loadCredentials();
+                        break;
+                }
+            });
+        });
+        
+        // Modal functionality
+        function openModal(modalId) {
+            document.getElementById(modalId).style.display = 'block';
+        }
+        
+        function closeModal(modalId) {
+            document.getElementById(modalId).style.display = 'none';
+        }
+        
+        closeModalButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                const modal = this.closest('.modal');
+                closeModal(modal.id);
+            });
+        });
+        
+        window.addEventListener('click', function(e) {
+            if (e.target.classList.contains('modal')) {
+                closeModal(e.target.id);
+            }
+        });
+        
+        // Load initial data
+        async function loadInitialData() {
+            // Retrieve per‑branch working hours before loading anything else
+            await fetchBranchTimes();
+            loadRestaurants();
+            loadDishes();
+            loadContainers();
+            loadPromocodes();
+            loadStats();
+            loadCredentials();
+            loadBranchTypes();
+            loadCategories();
+            loadSlides();
+        }
+        
+        // ==================== RESTAURANTS ====================
+        async function loadRestaurants() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/restaurants`);
+                let restaurants = await response.json();
+                // If the current user is a branch admin, filter to only their branch
+                if (currentUser && currentUser.restaurantId !== null && currentUser.restaurantId !== undefined) {
+                    restaurants = restaurants.filter(r => r.id === currentUser.restaurantId);
+                }
+                
+                const tbody = document.querySelector('#restaurantsTable tbody');
+                tbody.innerHTML = '';
+                
+                if (!restaurants || restaurants.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">Filiallar mavjud emas</td></tr>';
+                    return;
+                }
+                
+                restaurants.forEach(restaurant => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td>${restaurant.id}</td>
+                        <td>${restaurant.name}</td>
+                        <td>${restaurant.desc ? restaurant.desc.substring(0, 50) + '...' : ''}</td>
+                        <td><span class="badge ${restaurant.active ? 'badge-success' : 'badge-warning'}">${
+                            restaurant.active ? 'Faol' : 'Nofaol'
+                        }</span></td>
+                        <td>
+                            <button class="action-btn edit" data-id="${restaurant.id}"><i class="fas fa-edit"></i></button>
+                            <button class="action-btn delete" data-id="${restaurant.id}"><i class="fas fa-trash"></i></button>
+                            <button class="action-btn toggle-active" data-id="${restaurant.id}" title="Faolligini o'zgartirish"><i class="fas fa-toggle-${restaurant.active ? 'on' : 'off'}"></i></button>
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+                
+                // Add event listeners to edit/delete/toggle buttons
+                document.querySelectorAll('.action-btn.edit').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        const id = parseInt(this.getAttribute('data-id'));
+                        editRestaurant(id);
+                    });
+                });
+                
+                document.querySelectorAll('.action-btn.delete').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        const id = parseInt(this.getAttribute('data-id'));
+                        if (confirm('Ushbu filialni o\'chirishni tasdiqlaysizmi?')) {
+                            deleteRestaurant(id);
+                        }
+                    });
+                });
+
+                // Toggle active status
+                document.querySelectorAll('.action-btn.toggle-active').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        const id = parseInt(this.getAttribute('data-id'));
+                        toggleRestaurantActive(id);
+                    });
+                });
+            } catch (error) {
+                console.error('Failed to load restaurants:', error);
+            }
+        }
+        
+        // Add/Edit restaurant functions
+async function addRestaurant() {
+    document.getElementById('restaurantModalTitle').textContent = 'Filial Qo\'shish';
+    document.getElementById('restaurantForm').reset();
+    document.getElementById('restaurantId').value = '';
+    document.getElementById('restaurantImagePreview').innerHTML = '';
+    // Clear branch working hours when adding a new restaurant
+    document.getElementById('restaurantStartTime').value = '';
+    document.getElementById('restaurantEndTime').value = '';
+    // Load branch types into dropdown
+    try {
+        const select = document.getElementById('restaurantBranchType');
+        select.innerHTML = '<option value="">-- Tanlang --</option>';
+        const response = await fetch(`${API_BASE_URL}/branchtypes`);
+        const types = await response.json();
+        types.forEach(type => {
+            if (type.active !== false) {
+                const option = document.createElement('option');
+                option.value = type.id;
+                option.textContent = type.name;
+                select.appendChild(option);
+            }
+        });
+    } catch (err) {
+        console.error('Failed to load branch types for restaurant form:', err);
+    }
+    openModal('restaurantModal');
+}
+        
+        async function editRestaurant(id) {
+            try {
+                const response = await fetch(`${API_BASE_URL}/restaurants/${id}`);
+                const restaurant = await response.json();
+                
+                document.getElementById('restaurantModalTitle').textContent = 'Filialni tahrirlash';
+                document.getElementById('restaurantId').value = restaurant.id;
+                document.getElementById('restaurantName').value = restaurant.name;
+                document.getElementById('restaurantDesc').value = restaurant.desc || '';
+                document.getElementById('restaurantLat').value = restaurant.location?.lat || '';
+                document.getElementById('restaurantLng').value = restaurant.location?.lng || '';
+                document.getElementById('restaurantActive').value = restaurant.active;
+                // Populate branch types dropdown
+                const select = document.getElementById('restaurantBranchType');
+                select.innerHTML = '<option value="">-- Tanlang --</option>';
+                try {
+                    const responseTypes = await fetch(`${API_BASE_URL}/branchtypes`);
+                    const types = await responseTypes.json();
+                    types.forEach(type => {
+                        if (type.active !== false) {
+                            const option = document.createElement('option');
+                            option.value = type.id;
+                            option.textContent = type.name;
+                            if (restaurant.branchTypeId && parseInt(restaurant.branchTypeId) === type.id) {
+                                option.selected = true;
+                            }
+                            select.appendChild(option);
+                        }
+                    });
+                } catch (err) {
+                    console.error('Failed to load branch types for restaurant edit:', err);
+                }
+                document.getElementById('restaurantImagePreview').innerHTML = restaurant.image ? 
+                    `<img src="${restaurant.image}" alt="${restaurant.name}" style="max-width: 100px; max-height: 100px;">` : '';
+
+                // Populate branch working hours inputs from the stored schedule.
+                const bt = branchTimes && branchTimes[String(restaurant.id)] ? branchTimes[String(restaurant.id)] : null;
+                document.getElementById('restaurantStartTime').value = bt && bt.start ? bt.start : '';
+                document.getElementById('restaurantEndTime').value = bt && bt.end ? bt.end : '';
+                
+                openModal('restaurantModal');
+            } catch (error) {
+                console.error('Failed to edit restaurant:', error);
+            }
+        }
+        
+        async function deleteRestaurant(id) {
+            try {
+                await fetch(`${API_BASE_URL}/restaurants/${id}`, {
+                    method: 'DELETE'
+                });
+                loadRestaurants();
+            } catch (error) {
+                console.error('Failed to delete restaurant:', error);
+            }
+        }
+        
+        // Restaurant form submission
+        document.getElementById('restaurantForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const id = document.getElementById('restaurantId').value;
+            const name = document.getElementById('restaurantName').value;
+            const desc = document.getElementById('restaurantDesc').value;
+            // Normalize latitude and longitude values by replacing comma with dot.
+            const latInput = document.getElementById('restaurantLat').value;
+            const lngInput = document.getElementById('restaurantLng').value;
+            const lat = latInput ? latInput.replace(',', '.') : '';
+            const lng = lngInput ? lngInput.replace(',', '.') : '';
+            const active = document.getElementById('restaurantActive').value === 'true';
+            const branchTypeIdValue = document.getElementById('restaurantBranchType').value;
+            const imageFile = document.getElementById('restaurantImage').files[0];
+            
+            const formData = new FormData();
+            formData.append('name', name);
+            formData.append('desc', desc);
+            formData.append('lat', lat);
+            formData.append('lng', lng);
+            formData.append('active', active);
+            // branchTypeId may be empty string; sending empty will result in null on server
+            formData.append('branchTypeId', branchTypeIdValue);
+            if (imageFile) formData.append('image', imageFile);
+            
+            try {
+                // Read branch working hours from inputs
+                const startTime = document.getElementById('restaurantStartTime').value;
+                const endTime = document.getElementById('restaurantEndTime').value;
+
+                let savedId = id;
+                // Save or update restaurant and capture the ID of the saved
+                // record.  The backend returns the full restaurant object
+                // on both POST and PUT.  If parsing fails we fall back to
+                // the existing id (for updates).
+                if (id) {
+                    const resp = await fetch(`${API_BASE_URL}/restaurants/${id}`, {
+                        method: 'PUT',
+                        body: formData
+                    });
+                    try {
+                        const data = await resp.json();
+                        if (data && data.id) savedId = data.id;
+                    } catch (_) {}
+                } else {
+                    const resp = await fetch(`${API_BASE_URL}/restaurants`, {
+                        method: 'POST',
+                        body: formData
+                    });
+                    const data = await resp.json();
+                    savedId = data.id;
+                }
+
+                // Update the branch opening hours mapping.  Clone the
+                // existing object to avoid mutating state unexpectedly.
+                const updatedTimes = Object.assign({}, branchTimes || {});
+                if (startTime && endTime) {
+                    updatedTimes[String(savedId)] = { start: startTime, end: endTime };
+                } else {
+                    delete updatedTimes[String(savedId)];
+                }
+                try {
+                    await fetch(`${API_BASE_URL}/branchtimes`, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        credentials: 'include',
+                        body: JSON.stringify(updatedTimes)
+                    });
+                    // Update local cache
+                    branchTimes = updatedTimes;
+                } catch (err) {
+                    console.error('Failed to save branch times:', err);
+                }
+
+                closeModal('restaurantModal');
+                loadRestaurants();
+            } catch (error) {
+                console.error('Failed to save restaurant:', error);
+            }
+        });
+        
+        // ==================== DISHES ====================
+        async function loadDishes() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/dishes`);
+                let dishes = await response.json();
+                // Restrict dishes to the current user's branch if they are a branch admin
+                if (currentUser && currentUser.restaurantId !== null && currentUser.restaurantId !== undefined) {
+                    dishes = dishes.filter(d => d.restaurant_id === currentUser.restaurantId);
+                }
+                // Store the full list for searching
+                loadedDishes = dishes;
+                // Load restaurants list once for name resolution
+                const restaurantsResponse = await fetch(`${API_BASE_URL}/restaurants`);
+                loadedRestaurants = await restaurantsResponse.json();
+                // Render the table with the loaded dishes
+                renderDishTable(loadedDishes);
+            } catch (error) {
+                console.error('Failed to load dishes:', error);
+            }
+        }
+
+        /**
+         * Render the dishes table using the provided list.  This function clears
+         * any existing rows from the #dishesTable tbody and repopulates it
+         * based on the supplied array.  It also attaches event handlers for
+         * editing, deleting and toggling active status on each row.  If the
+         * list is empty, a single row indicating that there are no items is
+         * displayed.
+         *
+         * @param {Array} list An array of dish objects to display
+         */
+        function renderDishTable(list) {
+            const tbody = document.querySelector('#dishesTable tbody');
+            if (!tbody) return;
+            tbody.innerHTML = '';
+            if (!list || list.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align: center;">Mahsulotlar mavjud emas</td></tr>';
+                return;
+            }
+            list.forEach(dish => {
+                // Resolve restaurant name
+                const restaurant = loadedRestaurants.find(r => r.id === dish.restaurant_id);
+                const restaurantName = restaurant ? restaurant.name : 'Noma\'lum';
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${dish.id}</td>
+                    <td>${dish.name}</td>
+                    <td>${restaurantName}</td>
+                    <td>${dish.price ? dish.price.toLocaleString() + ' so\'m' : ''}</td>
+                    <td><span class="badge ${dish.active !== false ? 'badge-success' : 'badge-warning'}">${dish.active !== false ? 'Faol' : 'Nofaol'}</span></td>
+                    <td>
+                        <button class="action-btn edit" data-id="${dish.id}"><i class="fas fa-edit"></i></button>
+                        <button class="action-btn delete" data-id="${dish.id}"><i class="fas fa-trash"></i></button>
+                        <button class="action-btn toggle-active" data-id="${dish.id}" title="Faolligini o'zgartirish"><i class="fas fa-toggle-${dish.active !== false ? 'on' : 'off'}"></i></button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+            // Attach event listeners after populating rows
+            tbody.querySelectorAll('.action-btn.edit').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const id = parseInt(this.getAttribute('data-id'));
+                    editDish(id);
+                });
+            });
+            tbody.querySelectorAll('.action-btn.delete').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const id = parseInt(this.getAttribute('data-id'));
+                    if (confirm('Ushbu mahsulotni o\'chirishni tasdiqlaysizmi?')) {
+                        deleteDish(id);
+                    }
+                });
+            });
+            tbody.querySelectorAll('.action-btn.toggle-active').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const id = parseInt(this.getAttribute('data-id'));
+                    toggleDishActive(id);
+                });
+            });
+        }
+
+        // --------------------------------------------------------------
+        // Dish search filtering
+        //
+        // Initialise the search input once.  Whenever the user types in the
+        // #dishSearch field, the table is filtered to show only dishes
+        // whose names include the typed substring (case insensitive).  An
+        // empty search string restores the full list.  We register this
+        // handler outside of loadDishes() so it is attached exactly once.
+        (function attachDishSearchHandler() {
+            const searchEl = document.getElementById('dishSearch');
+            if (!searchEl) return;
+            // Avoid registering multiple handlers by checking a custom flag
+            if (searchEl._handlerAttached) return;
+            searchEl._handlerAttached = true;
+            searchEl.addEventListener('input', function() {
+                const value = this.value.trim().toLowerCase();
+                if (!value) {
+                    renderDishTable(loadedDishes);
+                    return;
+                }
+                const filtered = loadedDishes.filter(d => {
+                    const name = (d.name || '').toLowerCase();
+                    return name.includes(value);
+                });
+                renderDishTable(filtered);
+            });
+        })();
+
+        // Add/Edit dish functions
+        async function addDish() {
+            document.getElementById('dishModalTitle').textContent = 'Mahsulot Qo\'shish';
+            document.getElementById('dishForm').reset();
+            document.getElementById('dishId').value = '';
+            document.getElementById('dishImagePreview').innerHTML = '';
+            
+            try {
+                // Load restaurants dropdown
+                const restaurantSelect = document.getElementById('dishRestaurant');
+                restaurantSelect.innerHTML = '';
+
+                const restaurantsResponse = await fetch(`${API_BASE_URL}/restaurants`);
+                const restaurants = await restaurantsResponse.json();
+                // If branch admin, only show their own branch and disable the select
+                if (currentUser && currentUser.restaurantId !== null && currentUser.restaurantId !== undefined) {
+                    const only = restaurants.find(r => r.id === currentUser.restaurantId);
+                    if (only) {
+                        const option = document.createElement('option');
+                        option.value = only.id;
+                        option.textContent = only.name;
+                        option.selected = true;
+                        restaurantSelect.appendChild(option);
+                    }
+                    restaurantSelect.setAttribute('disabled', 'disabled');
+                } else {
+                    restaurants.forEach(restaurant => {
+                        const option = document.createElement('option');
+                        option.value = restaurant.id;
+                        option.textContent = restaurant.name;
+                        restaurantSelect.appendChild(option);
+                    });
+                    restaurantSelect.removeAttribute('disabled');
+                }
+
+                // Load categories dropdown
+                const categorySelect = document.getElementById('dishCategory');
+                categorySelect.innerHTML = '<option value="">-- Tanlang --</option>';
+                try {
+                    const catRes = await fetch(`${API_BASE_URL}/categories`);
+                    const categories = await catRes.json();
+                    categories.forEach(cat => {
+                        if (cat.active !== false) {
+                            const opt = document.createElement('option');
+                            opt.value = cat.id;
+                            opt.textContent = cat.name;
+                            categorySelect.appendChild(opt);
+                        }
+                    });
+                } catch (err) {
+                    console.error('Failed to load categories for dish form:', err);
+                }
+                
+                // Load containers checkboxes
+                const containersDiv = document.getElementById('dishContainers');
+                containersDiv.innerHTML = '';
+                
+                const containersResponse = await fetch(`${API_BASE_URL}/containers`);
+                const containers = await containersResponse.json();
+                
+                containers.forEach(container => {
+                    const div = document.createElement('div');
+                    div.className = 'checkbox-group';
+                    div.innerHTML = `
+                        <input type="checkbox" id="container_${container.id}" value="${container.id}">
+                        <label for="container_${container.id}">${container.name} (${container.price.toLocaleString()} so'm)</label>
+                    `;
+                    containersDiv.appendChild(div);
+                });
+                
+                // Clear variants
+                document.getElementById('dishVariants').innerHTML = '';
+                
+                openModal('dishModal');
+            } catch (error) {
+                console.error('Failed to prepare dish form:', error);
+            }
+        }
+        
+        async function editDish(id) {
+            try {
+                const dishResponse = await fetch(`${API_BASE_URL}/dishes/${id}`);
+                const dish = await dishResponse.json();
+                
+                document.getElementById('dishModalTitle').textContent = 'Mahsulotni Tahrirlash';
+                document.getElementById('dishId').value = dish.id;
+                document.getElementById('dishName').value = dish.name;
+                document.getElementById('dishDesc').value = dish.desc || '';
+                document.getElementById('dishPrice').value = dish.price || '';
+                
+                document.getElementById('dishImagePreview').innerHTML = dish.image ? 
+                    `<img src="${dish.image}" alt="${dish.name}" style="max-width: 100px; max-height: 100px;">` : '';
+                
+                // Load restaurants dropdown
+                const restaurantSelect = document.getElementById('dishRestaurant');
+                restaurantSelect.innerHTML = '';
+
+                const restaurantsResponse = await fetch(`${API_BASE_URL}/restaurants`);
+                const restaurants = await restaurantsResponse.json();
+                if (currentUser && currentUser.restaurantId !== null && currentUser.restaurantId !== undefined) {
+                    const only = restaurants.find(r => r.id === currentUser.restaurantId);
+                    if (only) {
+                        const option = document.createElement('option');
+                        option.value = only.id;
+                        option.textContent = only.name;
+                        option.selected = true;
+                        restaurantSelect.appendChild(option);
+                    }
+                    restaurantSelect.setAttribute('disabled', 'disabled');
+                } else {
+                    restaurants.forEach(restaurant => {
+                        const option = document.createElement('option');
+                        option.value = restaurant.id;
+                        option.textContent = restaurant.name;
+                        option.selected = restaurant.id === dish.restaurant_id;
+                        restaurantSelect.appendChild(option);
+                    });
+                    restaurantSelect.removeAttribute('disabled');
+                }
+
+                // Load categories dropdown
+                const categorySelect = document.getElementById('dishCategory');
+                categorySelect.innerHTML = '<option value="">-- Tanlang --</option>';
+                try {
+                    const catRes = await fetch(`${API_BASE_URL}/categories`);
+                    const categories = await catRes.json();
+                    categories.forEach(cat => {
+                        if (cat.active !== false) {
+                            const opt = document.createElement('option');
+                            opt.value = cat.id;
+                            opt.textContent = cat.name;
+                            if (dish.category_id && parseInt(dish.category_id) === cat.id) {
+                                opt.selected = true;
+                            }
+                            categorySelect.appendChild(opt);
+                        }
+                    });
+                } catch (err) {
+                    console.error('Failed to load categories for dish edit:', err);
+                }
+                
+                // Load containers checkboxes
+                const containersDiv = document.getElementById('dishContainers');
+                containersDiv.innerHTML = '';
+                
+                const containersResponse = await fetch(`${API_BASE_URL}/containers`);
+                const containers = await containersResponse.json();
+                
+                containers.forEach(container => {
+                    const div = document.createElement('div');
+                    div.className = 'checkbox-group';
+                    div.innerHTML = `
+                        <input type="checkbox" id="container_${container.id}" value="${container.id}" ${
+                            dish.containers?.includes(container.id) ? 'checked' : ''
+                        }>
+                        <label for="container_${container.id}">${container.name} (${container.price.toLocaleString()} so'm)</label>
+                    `;
+                    containersDiv.appendChild(div);
+                });
+                
+                // Load variants
+                const variantsDiv = document.getElementById('dishVariants');
+                variantsDiv.innerHTML = '';
+                if (dish.variants && dish.variants.length > 0) {
+                    dish.variants.forEach(variant => {
+                        addVariantField(variant.name, variant.price, variant.image);
+                    });
+                }
+                
+                openModal('dishModal');
+            } catch (error) {
+                console.error('Failed to edit dish:', error);
+            }
+        }
+        
+        async function deleteDish(id) {
+            try {
+                await fetch(`${API_BASE_URL}/dishes/${id}`, {
+                    method: 'DELETE'
+                });
+                loadDishes();
+            } catch (error) {
+                console.error('Failed to delete dish:', error);
+            }
+        }
+        
+        // Dish form submission
+        document.getElementById('dishForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const id = document.getElementById('dishId').value;
+            const name = document.getElementById('dishName').value;
+            const desc = document.getElementById('dishDesc').value;
+            const price = parseFloat(document.getElementById('dishPrice').value);
+            const restaurantId = parseInt(document.getElementById('dishRestaurant').value);
+            const categoryId = document.getElementById('dishCategory').value;
+            const imageFile = document.getElementById('dishImage').files[0];
+            
+            // Get selected containers
+            const selectedContainers = [];
+            document.querySelectorAll('#dishContainers input[type="checkbox"]:checked').forEach(checkbox => {
+                selectedContainers.push(parseInt(checkbox.value));
+            });
+            
+            // Get variants
+            const variants = [];
+            document.querySelectorAll('.variant-item').forEach(item => {
+                const name = item.querySelector('.variant-name').value;
+                const price = parseFloat(item.querySelector('.variant-price').value);
+                variants.push({ name, price });
+            });
+            
+            const formData = new FormData();
+            formData.append('name', name);
+            formData.append('desc', desc);
+            formData.append('price', price);
+            formData.append('restaurant_id', restaurantId);
+            formData.append('category_id', categoryId);
+            formData.append('containers', JSON.stringify(selectedContainers));
+            formData.append('variants', JSON.stringify(variants));
+            if (imageFile) formData.append('image', imageFile);
+            
+            try {
+                if (id) {
+                    // Update existing dish
+                    await fetch(`${API_BASE_URL}/dishes/${id}`, {
+                        method: 'PUT',
+                        body: formData
+                    });
+                } else {
+                    // Add new dish
+                    await fetch(`${API_BASE_URL}/dishes`, {
+                        method: 'POST',
+                        body: formData
+                    });
+                }
+                
+                closeModal('dishModal');
+                loadDishes();
+            } catch (error) {
+                console.error('Failed to save dish:', error);
+            }
+        });
+        
+        // Add variant field
+        document.getElementById('addVariantBtn').addEventListener('click', function() {
+            addVariantField();
+        });
+        
+        function addVariantField(name = '', price = '', image = '') {
+            const variantsDiv = document.getElementById('dishVariants');
+            const variantId = Date.now();
+            
+            const div = document.createElement('div');
+            div.className = 'variant-item';
+            div.innerHTML = `
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Variant Nomi</label>
+                        <input type="text" class="form-control variant-name" value="${name}" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Narxi</label>
+                        <input type="number" class="form-control variant-price" value="${price}" required>
+                    </div>
+                </div>
+                <i class="fas fa-times remove-variant"></i>
+            `;
+            
+            variantsDiv.appendChild(div);
+            
+            // Add event listener to remove button
+            div.querySelector('.remove-variant').addEventListener('click', function() {
+                variantsDiv.removeChild(div);
+            });
+        }
+        
+        // ==================== CONTAINERS ====================
+        async function loadContainers() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/containers`);
+                const containers = await response.json();
+                
+                const tbody = document.querySelector('#containersTable tbody');
+                tbody.innerHTML = '';
+                
+                if (containers.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="4" style="text-align: center;">Idishlar mavjud emas</td></tr>';
+                    return;
+                }
+                
+                containers.forEach(container => {
+                    const tr = document.createElement('tr');
+                    // Determine active status; if undefined, default to true
+                    const isActive = container.active !== false;
+                    tr.innerHTML = `
+                        <td>${container.id}</td>
+                        <td>${container.name}</td>
+                        <td>${container.price.toLocaleString()} so'm</td>
+                        <td><span class="badge ${isActive ? 'badge-success' : 'badge-danger'}">${isActive ? 'Faol' : 'Nofaol'}</span></td>
+                        <td>
+                            <button class="action-btn toggle" data-id="${container.id}"><i class="${isActive ? 'fas fa-toggle-on' : 'fas fa-toggle-off'}"></i></button>
+                            <button class="action-btn edit" data-id="${container.id}"><i class="fas fa-edit"></i></button>
+                            <button class="action-btn delete" data-id="${container.id}"><i class="fas fa-trash"></i></button>
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+
+                // Add event listeners to toggle/edit/delete buttons
+                document.querySelectorAll('.action-btn.toggle').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        const id = parseInt(this.getAttribute('data-id'));
+                        toggleContainerActive(id);
+                    });
+                });
+
+                document.querySelectorAll('.action-btn.edit').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        const id = parseInt(this.getAttribute('data-id'));
+                        editContainer(id);
+                    });
+                });
+                
+                document.querySelectorAll('.action-btn.delete').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        const id = parseInt(this.getAttribute('data-id'));
+                        if (confirm('Ushbu idishni o\'chirishni tasdiqlaysizmi?')) {
+                            deleteContainer(id);
+                        }
+                    });
+                });
+            } catch (error) {
+                console.error('Failed to load containers:', error);
+            }
+        }
+        
+        // Add/Edit container functions
+        function addContainer() {
+            document.getElementById('containerModalTitle').textContent = 'Idish Qo\'shish';
+            document.getElementById('containerForm').reset();
+            document.getElementById('containerId').value = '';
+            openModal('containerModal');
+        }
+        
+        async function editContainer(id) {
+            try {
+                const response = await fetch(`${API_BASE_URL}/containers/${id}`);
+                const container = await response.json();
+                
+                document.getElementById('containerModalTitle').textContent = 'Idishni Tahrirlash';
+                document.getElementById('containerId').value = container.id;
+                document.getElementById('containerName').value = container.name;
+                document.getElementById('containerPrice').value = container.price;
+                openModal('containerModal');
+            } catch (error) {
+                console.error('Failed to edit container:', error);
+            }
+        }
+        
+        async function deleteContainer(id) {
+            try {
+                await fetch(`${API_BASE_URL}/containers/${id}`, {
+                    method: 'DELETE'
+                });
+                loadContainers();
+            } catch (error) {
+                console.error('Failed to delete container:', error);
+            }
+        }
+        
+        // Container form submission
+        document.getElementById('containerForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const id = document.getElementById('containerId').value;
+            const name = document.getElementById('containerName').value;
+            const price = parseFloat(document.getElementById('containerPrice').value);
+            
+            const containerData = { name, price };
+            
+            try {
+                if (id) {
+                    // Update existing container
+                    await fetch(`${API_BASE_URL}/containers/${id}`, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(containerData)
+                    });
+                } else {
+                    // Add new container
+                    await fetch(`${API_BASE_URL}/containers`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(containerData)
+                    });
+                }
+                
+                closeModal('containerModal');
+                loadContainers();
+            } catch (error) {
+                console.error('Failed to save container:', error);
+            }
+        });
+        
+        // ==================== PROMOCODES ====================
+        async function loadPromocodes() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/promocodes`);
+                const promocodes = await response.json();
+                
+                const tbody = document.querySelector('#promocodesTable tbody');
+                tbody.innerHTML = '';
+                
+                if (promocodes.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="4" style="text-align: center;">Promo kodlar mavjud emas</td></tr>';
+                    return;
+                }
+                
+                promocodes.forEach(promo => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td>${promo.code}</td>
+                        <td>${promo.min_sum.toLocaleString()} so'm</td>
+                        <td>${promo.discount.toLocaleString()} so'm</td>
+                        <td>
+                            <button class="action-btn delete" data-code="${promo.code}"><i class="fas fa-trash"></i></button>
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+                
+                // Add event listeners to delete buttons
+                document.querySelectorAll('.action-btn.delete').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        const code = this.getAttribute('data-code');
+                        if (confirm('Ushbu promo kodni o\'chirishni tasdiqlaysizmi?')) {
+                            deletePromocode(code);
+                        }
+                    });
+                });
+            } catch (error) {
+                console.error('Failed to load promocodes:', error);
+            }
+        }
+        
+        // Add/Edit promocode functions
+        function addPromocode() {
+            document.getElementById('promocodeModalTitle').textContent = 'Promo Kod Qo\'shish';
+            document.getElementById('promocodeForm').reset();
+            openModal('promocodeModal');
+        }
+        
+        async function deletePromocode(code) {
+            try {
+                await fetch(`${API_BASE_URL}/promocodes/${code}`, {
+                    method: 'DELETE'
+                });
+                loadPromocodes();
+            } catch (error) {
+                console.error('Failed to delete promocode:', error);
+            }
+        }
+        
+        // Promocode form submission
+        document.getElementById('promocodeForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const code = document.getElementById('promocodeCode').value;
+            const minSum = parseFloat(document.getElementById('promocodeMinSum').value);
+            const discount = parseFloat(document.getElementById('promocodeDiscount').value);
+            
+            const promocodeData = { code, min_sum: minSum, discount };
+            
+            try {
+                await fetch(`${API_BASE_URL}/promocodes`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(promocodeData)
+                });
+                
+                closeModal('promocodeModal');
+                loadPromocodes();
+            } catch (error) {
+                console.error('Failed to save promocode:', error);
+            }
+        });
+        
+        // ==================== STATISTICS ====================
+        async function loadStats() {
+            try {
+                const todayTab = document.querySelector('.stats-tab[data-stats="today"]');
+                const weekTab = document.querySelector('.stats-tab[data-stats="week"]');
+                const monthTab = document.querySelector('.stats-tab[data-stats="month"]');
+                
+                todayTab.classList.add('active');
+                weekTab.classList.remove('active');
+                monthTab.classList.remove('active');
+                
+                // Add event listeners to stats tabs
+                document.querySelectorAll('.stats-tab').forEach(tab => {
+                    tab.addEventListener('click', function() {
+                        document.querySelectorAll('.stats-tab').forEach(t => t.classList.remove('active'));
+                        this.classList.add('active');
+                        
+                        const period = this.getAttribute('data-stats');
+                        renderStats(period);
+                    });
+                });
+                
+                renderStats('today');
+            } catch (error) {
+                console.error('Failed to load stats:', error);
+            }
+        }
+        
+        async function renderStats(period) {
+            try {
+                const response = await fetch(`${API_BASE_URL}/stats/${period}`);
+                const data = await response.json();
+                
+                // Render revenue (simplified - in real app would use Chart.js)
+                const revenueChart = document.getElementById('revenueChart');
+                revenueChart.innerHTML = `<p>Daromad: ${data.revenue.toLocaleString()} so'm</p>`;
+                
+                // Render restaurants stats
+                const restaurantsChart = document.getElementById('restaurantsChart');
+                let restaurantsHtml = '<ul style="list-style: none; padding-left: 0;">';
+                
+                const restaurantsResponse = await fetch(`${API_BASE_URL}/restaurants`);
+                const restaurants = await restaurantsResponse.json();
+                
+                data.restaurantStats.forEach(stat => {
+                    const restaurant = restaurants.find(r => r.id === stat.restaurant_id);
+                    restaurantsHtml += `
+                        <li style="margin-bottom: 10px;">
+                            <div>${restaurant ? restaurant.name : 'Noma\'lum filial'}</div>
+                            <div style="font-size: 14px; color: #6c757d;">
+                                Buyurtmalar: ${stat.orders_count}, Daromad: ${stat.revenue.toLocaleString()} so'm
+                            </div>
+                        </li>
+                    `;
+                });
+                restaurantsHtml += '</ul>';
+                restaurantsChart.innerHTML = restaurantsHtml;
+                
+                // Render top dishes (simplified - in real app would use Chart.js)
+                const dishesChart = document.getElementById('topDishesChart');
+                let dishesHtml = '<ul style="list-style: none; padding-left: 0;">';
+                
+                const dishesResponse = await fetch(`${API_BASE_URL}/dishes`);
+                const dishes = await dishesResponse.json();
+                
+                data.topDishes.forEach(stat => {
+                    const dish = dishes.find(d => d.id === stat.dish_id);
+                    dishesHtml += `
+                        <li style="margin-bottom: 10px;">
+                            <div>${dish ? dish.name : 'Noma\'lum mahsulot'}</div>
+                            <div style="font-size: 14px; color: #6c757d;">
+                                Sotilgan: ${stat.count} ta
+                            </div>
+                        </li>
+                    `;
+                });
+                dishesHtml += '</ul>';
+                dishesChart.innerHTML = dishesHtml;
+                
+                // Render top users
+                const usersList = document.getElementById('topUsersList');
+                usersList.innerHTML = '';
+                
+                data.topUsers.forEach(user => {
+                    const li = document.createElement('li');
+                    li.className = 'user-item';
+                    li.innerHTML = `
+                        <div class="user-info">
+                            <div class="user-avatar">${user.name.charAt(0)}</div>
+                            <div>
+                                <div>${user.name}</div>
+                                <div class="user-stats">${user.phone}</div>
+                            </div>
+                        </div>
+                        <div class="user-stats">${user.orders_count} ta buyurtma</div>
+                    `;
+                    usersList.appendChild(li);
+                });
+            } catch (error) {
+                console.error('Failed to render stats:', error);
+            }
+        }
+        
+        // ==================== CREDENTIALS ====================
+        async function loadCredentials() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/credentials`);
+                const credentials = await response.json();
+                const credentialsList = document.getElementById('credentialsList');
+                credentialsList.innerHTML = '';
+                if (!credentials || credentials.length === 0) {
+                    credentialsList.innerHTML = '<li style="text-align: center;">Login va parollar mavjud emas</li>';
+                    return;
+                }
+                // Load restaurants to map IDs to names
+                let restMap = {};
+                try {
+                    const restRes = await fetch(`${API_BASE_URL}/restaurants`);
+                    const rests = await restRes.json();
+                    rests.forEach(r => { restMap[r.id] = r.name; });
+                } catch (_) {}
+                credentials.forEach(cred => {
+                    const li = document.createElement('li');
+                    li.className = 'credential-item';
+                    const maskedPw = '*'.repeat(cred.password.length);
+                    let branchInfo = '';
+                    if (cred.restaurantId !== undefined && cred.restaurantId !== null && cred.restaurantId !== '') {
+                        const rname = restMap[parseInt(cred.restaurantId)] || '—';
+                        branchInfo = `<div class="user-stats">Filial: ${rname}</div>`;
+                    } else {
+                        branchInfo = `<div class="user-stats">Admin</div>`;
+                    }
+                    li.innerHTML = `
+                        <div>
+                            <strong>${cred.login}</strong>
+                            ${branchInfo}
+                        </div>
+                        <div class="credential-actions">
+                            <button class="action-btn edit" data-id="${cred.id}"><i class="fas fa-edit"></i></button>
+                            ${cred.id !== 1 ? '<button class="action-btn delete" data-id="' + cred.id + '"><i class="fas fa-trash"></i></button>' : ''}
+                        </div>
+                    `;
+                    credentialsList.appendChild(li);
+                });
+                
+                // Add event listeners to edit/delete buttons
+                document.querySelectorAll('.credential-item .action-btn.edit').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        const id = parseInt(this.getAttribute('data-id'));
+                        editCredential(id);
+                    });
+                });
+                
+                document.querySelectorAll('.credential-item .action-btn.delete').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        const id = parseInt(this.getAttribute('data-id'));
+                        if (confirm('Ushbu login va parolni o\'chirishni tasdiqlaysizmi?')) {
+                            deleteCredential(id);
+                        }
+                    });
+                });
+            } catch (error) {
+                console.error('Failed to load credentials:', error);
+            }
+        }
+        
+        // Add/Edit credential functions
+        function addCredential() {
+            document.getElementById('credentialModalTitle').textContent = 'Login va parol qo\'shish';
+            document.getElementById('credentialForm').reset();
+            document.getElementById('credentialId').value = '';
+            // Populate restaurant select
+            const restaurantSelect = document.getElementById('credentialRestaurant');
+            restaurantSelect.innerHTML = '<option value="">-- Umumiy admin --</option>';
+            // Load restaurants list for assigning to credentials
+            fetch(`${API_BASE_URL}/restaurants`).then(res => res.json()).then(list => {
+                list.forEach(r => {
+                    const opt = document.createElement('option');
+                    opt.value = r.id;
+                    opt.textContent = r.name;
+                    restaurantSelect.appendChild(opt);
+                });
+            }).catch(() => {});
+            openModal('credentialModal');
+        }
+        
+        async function editCredential(id) {
+            try {
+                const response = await fetch(`${API_BASE_URL}/credentials/${id}`);
+                const credential = await response.json();
+                
+                document.getElementById('credentialModalTitle').textContent = 'Login va parolni Tahrirlash';
+                document.getElementById('credentialId').value = credential.id;
+                document.getElementById('credentialLogin').value = credential.login;
+                document.getElementById('credentialPassword').value = credential.password;
+                // Populate restaurant select with available restaurants
+                const restaurantSelect = document.getElementById('credentialRestaurant');
+                restaurantSelect.innerHTML = '<option value="">-- Umumiy admin --</option>';
+                try {
+                    const restRes = await fetch(`${API_BASE_URL}/restaurants`);
+                    const list = await restRes.json();
+                    list.forEach(r => {
+                        const opt = document.createElement('option');
+                        opt.value = r.id;
+                        opt.textContent = r.name;
+                        if (credential.restaurantId && parseInt(credential.restaurantId) === r.id) {
+                            opt.selected = true;
+                        }
+                        restaurantSelect.appendChild(opt);
+                    });
+                } catch (_) {}
+                openModal('credentialModal');
+            } catch (error) {
+                console.error('Failed to edit credential:', error);
+            }
+        }
+        
+        async function deleteCredential(id) {
+            try {
+                await fetch(`${API_BASE_URL}/credentials/${id}`, {
+                    method: 'DELETE'
+                });
+                loadCredentials();
+            } catch (error) {
+                console.error('Failed to delete credential:', error);
+            }
+        }
+        
+        // Credential form submission
+        document.getElementById('credentialForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const id = document.getElementById('credentialId').value;
+            const login = document.getElementById('credentialLogin').value;
+            const password = document.getElementById('credentialPassword').value;
+            
+            const restaurantIdValue = document.getElementById('credentialRestaurant').value;
+            const credentialData = { login, password };
+            // Include restaurantId if provided; empty string denotes a full admin
+            credentialData.restaurantId = restaurantIdValue;
+            
+            try {
+                if (id) {
+                    // Update existing credential
+                    await fetch(`${API_BASE_URL}/credentials/${id}`, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(credentialData)
+                    });
+                } else {
+                    // Add new credential
+                    await fetch(`${API_BASE_URL}/credentials`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(credentialData)
+                    });
+                }
+                
+                closeModal('credentialModal');
+                loadCredentials();
+            } catch (error) {
+                console.error('Failed to save credential:', error);
+            }
+        });
+        
+        // Toggle credential password visibility
+        document.getElementById('toggleCredentialPassword').addEventListener('click', function() {
+            const passwordInput = document.getElementById('credentialPassword');
+            const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+            passwordInput.setAttribute('type', type);
+            this.classList.toggle('fa-eye-slash');
+        });
+        
+        // Add event listeners to all add buttons
+        document.getElementById('addRestaurantBtn').addEventListener('click', addRestaurant);
+        document.getElementById('addDishBtn').addEventListener('click', addDish);
+        document.getElementById('addContainerBtn').addEventListener('click', addContainer);
+        document.getElementById('addPromocodeBtn').addEventListener('click', addPromocode);
+        document.getElementById('addCredentialBtn').addEventListener('click', addCredential);
+
+        /* ========================================================
+           BRANCH TYPES MANAGEMENT
+           These functions handle CRUD operations for branch types. A branch type
+           classifies a restaurant as a particular kind of outlet (e.g., restaurant,
+           shop, pharmacy). Each type can have an image and be toggled active.
+        ======================================================== */
+        async function loadBranchTypes() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/branchtypes`);
+                const types = await response.json();
+                const tbody = document.querySelector('#branchtypesTable tbody');
+                tbody.innerHTML = '';
+                if (!types || types.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">Filial turlari mavjud emas</td></tr>';
+                    return;
+                }
+                types.forEach(type => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td>${type.id}</td>
+                        <td>${type.name}</td>
+                        <td>${type.image ? '<img src="' + type.image + '" style="width:40px;height:40px;object-fit:cover;border-radius:4px;">' : ''}</td>
+                        <td><span class="badge ${type.active !== false ? 'badge-success' : 'badge-warning'}">${type.active !== false ? 'Faol' : 'Nofaol'}</span></td>
+                        <td>
+                            <button class="action-btn edit" data-id="${type.id}"><i class="fas fa-edit"></i></button>
+                            <button class="action-btn delete" data-id="${type.id}"><i class="fas fa-trash"></i></button>
+                            <button class="action-btn toggle-active" data-id="${type.id}" title="Faolligini o'zgartirish"><i class="fas fa-toggle-${type.active !== false ? 'on' : 'off'}"></i></button>
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+                // Add listeners
+                document.querySelectorAll('#branchtypesTable .action-btn.edit').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        const id = parseInt(this.getAttribute('data-id'));
+                        editBranchType(id);
+                    });
+                });
+                document.querySelectorAll('#branchtypesTable .action-btn.delete').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        const id = parseInt(this.getAttribute('data-id'));
+                        if (confirm('Ushbu filial turini o\'chirishni tasdiqlaysizmi?')) {
+                            deleteBranchType(id);
+                        }
+                    });
+                });
+                document.querySelectorAll('#branchtypesTable .action-btn.toggle-active').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        const id = parseInt(this.getAttribute('data-id'));
+                        toggleBranchTypeActive(id);
+                    });
+                });
+            } catch (error) {
+                console.error('Failed to load branch types:', error);
+            }
+        }
+
+        function addBranchType() {
+            document.getElementById('branchTypeModalTitle').textContent = 'Filial turi qo\'shish';
+            document.getElementById('branchTypeForm').reset();
+            document.getElementById('branchTypeId').value = '';
+            document.getElementById('branchTypeImagePreview').innerHTML = '';
+            openModal('branchTypeModal');
+        }
+
+        async function editBranchType(id) {
+            try {
+                const response = await fetch(`${API_BASE_URL}/branchtypes/${id}`);
+                const type = await response.json();
+                document.getElementById('branchTypeModalTitle').textContent = 'Filial turini tahrirlash';
+                document.getElementById('branchTypeId').value = type.id;
+                document.getElementById('branchTypeName').value = type.name;
+                document.getElementById('branchTypeActive').value = type.active !== false;
+                document.getElementById('branchTypeImagePreview').innerHTML = type.image ? `<img src="${type.image}" style="max-width:100px;max-height:100px;">` : '';
+                openModal('branchTypeModal');
+            } catch (error) {
+                console.error('Failed to edit branch type:', error);
+            }
+        }
+
+        async function deleteBranchType(id) {
+            try {
+                await fetch(`${API_BASE_URL}/branchtypes/${id}`, {
+                    method: 'DELETE'
+                });
+                loadBranchTypes();
+            } catch (error) {
+                console.error('Failed to delete branch type:', error);
+            }
+        }
+
+        async function toggleBranchTypeActive(id) {
+            try {
+                await fetch(`${API_BASE_URL}/branchtypes/${id}/active`, {
+                    method: 'PUT'
+                });
+                loadBranchTypes();
+            } catch (error) {
+                console.error('Failed to toggle branch type active:', error);
+            }
+        }
+
+        // Branch type form submission
+        document.getElementById('branchTypeForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const id = document.getElementById('branchTypeId').value;
+            const name = document.getElementById('branchTypeName').value;
+            const active = document.getElementById('branchTypeActive').value;
+            const imageFile = document.getElementById('branchTypeImage').files[0];
+            const formData = new FormData();
+            formData.append('name', name);
+            formData.append('active', active);
+            if (imageFile) formData.append('image', imageFile);
+            try {
+                if (id) {
+                    await fetch(`${API_BASE_URL}/branchtypes/${id}`, {
+                        method: 'PUT',
+                        body: formData
+                    });
+                } else {
+                    await fetch(`${API_BASE_URL}/branchtypes`, {
+                        method: 'POST',
+                        body: formData
+                    });
+                }
+                closeModal('branchTypeModal');
+                loadBranchTypes();
+            } catch (error) {
+                console.error('Failed to save branch type:', error);
+            }
+        });
+
+        /* ========================================================
+           CATEGORIES MANAGEMENT
+           These functions handle CRUD operations for food categories. Each
+           category can have an image and be toggled active. Categories are
+           used to classify dishes and filter branches on the client.
+        ======================================================== */
+        async function loadCategories() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/categories`);
+                const categories = await response.json();
+                const tbody = document.querySelector('#categoriesTable tbody');
+                tbody.innerHTML = '';
+                if (!categories || categories.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">Kategoriyalar mavjud emas</td></tr>';
+                } else {
+                    categories.forEach(cat => {
+                        const tr = document.createElement('tr');
+                        tr.innerHTML = `
+                            <td>${cat.id}</td>
+                            <td>${cat.name}</td>
+                            <td>${cat.image ? '<img src="' + cat.image + '" style="width:40px;height:40px;object-fit:cover;border-radius:4px;">' : ''}</td>
+                            <td><span class="badge ${cat.active !== false ? 'badge-success' : 'badge-warning'}">${cat.active !== false ? 'Faol' : 'Nofaol'}</span></td>
+                            <td>
+                                <button class="action-btn edit" data-id="${cat.id}"><i class="fas fa-edit"></i></button>
+                                <button class="action-btn delete" data-id="${cat.id}"><i class="fas fa-trash"></i></button>
+                                <button class="action-btn toggle-active" data-id="${cat.id}" title="Faolligini o'zgartirish"><i class="fas fa-toggle-${cat.active !== false ? 'on' : 'off'}"></i></button>
+                            </td>
+                        `;
+                        tbody.appendChild(tr);
+                    });
+                }
+                // Listeners
+                document.querySelectorAll('#categoriesTable .action-btn.edit').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        const id = parseInt(this.getAttribute('data-id'));
+                        editCategory(id);
+                    });
+                });
+                document.querySelectorAll('#categoriesTable .action-btn.delete').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        const id = parseInt(this.getAttribute('data-id'));
+                        if (confirm('Ushbu kategoriyani o\'chirishni tasdiqlaysizmi?')) {
+                            deleteCategory(id);
+                        }
+                    });
+                });
+                document.querySelectorAll('#categoriesTable .action-btn.toggle-active').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        const id = parseInt(this.getAttribute('data-id'));
+                        toggleCategoryActive(id);
+                    });
+                });
+            } catch (error) {
+                console.error('Failed to load categories:', error);
+            }
+        }
+
+        function addCategory() {
+            document.getElementById('categoryModalTitle').textContent = 'Kategoriya qo\'shish';
+            document.getElementById('categoryForm').reset();
+            document.getElementById('categoryId').value = '';
+            document.getElementById('categoryImagePreview').innerHTML = '';
+            openModal('categoryModal');
+        }
+
+        async function editCategory(id) {
+            try {
+                const response = await fetch(`${API_BASE_URL}/categories/${id}`);
+                const cat = await response.json();
+                document.getElementById('categoryModalTitle').textContent = 'Kategoriyani tahrirlash';
+                document.getElementById('categoryId').value = cat.id;
+                document.getElementById('categoryName').value = cat.name;
+                document.getElementById('categoryActive').value = cat.active !== false;
+                document.getElementById('categoryImagePreview').innerHTML = cat.image ? `<img src="${cat.image}" style="max-width:100px;max-height:100px;">` : '';
+                openModal('categoryModal');
+            } catch (error) {
+                console.error('Failed to edit category:', error);
+            }
+        }
+
+        async function deleteCategory(id) {
+            try {
+                await fetch(`${API_BASE_URL}/categories/${id}`, {
+                    method: 'DELETE'
+                });
+                loadCategories();
+            } catch (error) {
+                console.error('Failed to delete category:', error);
+            }
+        }
+
+        async function toggleCategoryActive(id) {
+            try {
+                await fetch(`${API_BASE_URL}/categories/${id}/active`, {
+                    method: 'PUT'
+                });
+                loadCategories();
+            } catch (error) {
+                console.error('Failed to toggle category active:', error);
+            }
+        }
+
+        // Category form submission
+        document.getElementById('categoryForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const id = document.getElementById('categoryId').value;
+            const name = document.getElementById('categoryName').value;
+            const active = document.getElementById('categoryActive').value;
+            const imageFile = document.getElementById('categoryImage').files[0];
+            const formData = new FormData();
+            formData.append('name', name);
+            formData.append('active', active);
+            if (imageFile) formData.append('image', imageFile);
+            try {
+                if (id) {
+                    await fetch(`${API_BASE_URL}/categories/${id}`, {
+                        method: 'PUT',
+                        body: formData
+                    });
+                } else {
+                    await fetch(`${API_BASE_URL}/categories`, {
+                        method: 'POST',
+                        body: formData
+                    });
+                }
+                closeModal('categoryModal');
+                loadCategories();
+            } catch (error) {
+                console.error('Failed to save category:', error);
+            }
+        });
+
+        /* ========================================================
+           SLIDES MANAGEMENT
+           These functions handle CRUD operations for homepage slides. Slides
+           support an optional expiration date/time (ISO). The admin can add,
+           edit or delete slides. The frontend filters out expired slides when
+           rendering on the public site.
+        ======================================================== */
+        async function loadSlides() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/slides`);
+                const slides = await response.json();
+                const tbody = document.querySelector('#slidesTable tbody');
+                tbody.innerHTML = '';
+                if (!slides || slides.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">Slayder rasmlar mavjud emas</td></tr>';
+                } else {
+                    slides.forEach(slide => {
+                        const expire = slide.expireAt ? new Date(slide.expireAt).toLocaleString('uz-UZ') : '-';
+                        const tr = document.createElement('tr');
+                        tr.innerHTML = `
+                            <td>${slide.id}</td>
+                            <td>${slide.image ? '<img src="' + slide.image + '" style="width:60px;height:40px;object-fit:cover;border-radius:4px;">' : ''}</td>
+                            <td>${expire}</td>
+                            <td>
+                                <button class="action-btn edit" data-id="${slide.id}"><i class="fas fa-edit"></i></button>
+                                <button class="action-btn delete" data-id="${slide.id}"><i class="fas fa-trash"></i></button>
+                            </td>
+                        `;
+                        tbody.appendChild(tr);
+                    });
+                }
+                // Listeners
+                document.querySelectorAll('#slidesTable .action-btn.edit').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        const id = parseInt(this.getAttribute('data-id'));
+                        editSlide(id);
+                    });
+                });
+                document.querySelectorAll('#slidesTable .action-btn.delete').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        const id = parseInt(this.getAttribute('data-id'));
+                        if (confirm('Ushbu slayder rasmni o\'chirishni tasdiqlaysizmi?')) {
+                            deleteSlide(id);
+                        }
+                    });
+                });
+            } catch (error) {
+                console.error('Failed to load slides:', error);
+            }
+        }
+
+        function addSlide() {
+            document.getElementById('slideModalTitle').textContent = 'Slayder qo\'shish';
+            document.getElementById('slideForm').reset();
+            document.getElementById('slideId').value = '';
+            document.getElementById('slideImagePreview').innerHTML = '';
+            openModal('slideModal');
+        }
+
+        async function editSlide(id) {
+            try {
+                const response = await fetch(`${API_BASE_URL}/slides/${id}`);
+                const slide = await response.json();
+                document.getElementById('slideModalTitle').textContent = 'Slayderni tahrirlash';
+                document.getElementById('slideId').value = slide.id;
+                document.getElementById('slideImagePreview').innerHTML = slide.image ? `<img src="${slide.image}" style="max-width:100px;max-height:100px;">` : '';
+                // parse expireAt to local datetime string for input
+                if (slide.expireAt) {
+                    const dt = new Date(slide.expireAt);
+                    const offset = dt.getTimezoneOffset();
+                    // convert to local time for datetime-local input
+                    const localISO = new Date(dt.getTime() - offset * 60000).toISOString().slice(0,16);
+                    document.getElementById('slideExpire').value = localISO;
+                } else {
+                    document.getElementById('slideExpire').value = '';
+                }
+                openModal('slideModal');
+            } catch (error) {
+                console.error('Failed to edit slide:', error);
+            }
+        }
+
+        async function deleteSlide(id) {
+            try {
+                await fetch(`${API_BASE_URL}/slides/${id}`, {
+                    method: 'DELETE'
+                });
+                loadSlides();
+            } catch (error) {
+                console.error('Failed to delete slide:', error);
+            }
+        }
+
+        // Slide form submission
+        document.getElementById('slideForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const id = document.getElementById('slideId').value;
+            const imageFile = document.getElementById('slideImage').files[0];
+            const expireInput = document.getElementById('slideExpire').value;
+            const formData = new FormData();
+            if (imageFile) formData.append('image', imageFile);
+            // expireAt should be ISO string or empty; convert local time to ISO if provided
+            if (expireInput) {
+                const dt = new Date(expireInput);
+                formData.append('expireAt', dt.toISOString());
+            } else {
+                formData.append('expireAt', '');
+            }
+            try {
+                if (id) {
+                    await fetch(`${API_BASE_URL}/slides/${id}`, {
+                        method: 'PUT',
+                        body: formData
+                    });
+                } else {
+                    await fetch(`${API_BASE_URL}/slides`, {
+                        method: 'POST',
+                        body: formData
+                    });
+                }
+                closeModal('slideModal');
+                loadSlides();
+            } catch (error) {
+                console.error('Failed to save slide:', error);
+            }
+        });
+
+        // Add buttons for branch types, categories and slides
+        document.getElementById('addBranchTypeBtn').addEventListener('click', addBranchType);
+        document.getElementById('addCategoryBtn').addEventListener('click', addCategory);
+        document.getElementById('addSlideBtn').addEventListener('click', addSlide);
+
+        // ==================== Work Hours ====================
+        async function loadWorkHours() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/workhours`);
+                const hours = await response.json();
+                // Populate inputs with fetched values
+                const setTime = (id, value) => {
+                    const input = document.getElementById(id);
+                    if (input) input.value = value || '';
+                };
+                setTime('mondayStart', hours.monday?.start);
+                setTime('mondayEnd', hours.monday?.end);
+                setTime('tuesdayStart', hours.tuesday?.start);
+                setTime('tuesdayEnd', hours.tuesday?.end);
+                setTime('wednesdayStart', hours.wednesday?.start);
+                setTime('wednesdayEnd', hours.wednesday?.end);
+                setTime('thursdayStart', hours.thursday?.start);
+                setTime('thursdayEnd', hours.thursday?.end);
+                setTime('fridayStart', hours.friday?.start);
+                setTime('fridayEnd', hours.friday?.end);
+                setTime('saturdayStart', hours.saturday?.start);
+                setTime('saturdayEnd', hours.saturday?.end);
+                setTime('sundayStart', hours.sunday?.start);
+                setTime('sundayEnd', hours.sunday?.end);
+            } catch (err) {
+                console.error('Failed to load work hours:', err);
+            }
+        }
+
+        document.getElementById('workHoursForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            // Gather values into an object
+            const newHours = {
+                monday: { start: document.getElementById('mondayStart').value, end: document.getElementById('mondayEnd').value },
+                tuesday: { start: document.getElementById('tuesdayStart').value, end: document.getElementById('tuesdayEnd').value },
+                wednesday: { start: document.getElementById('wednesdayStart').value, end: document.getElementById('wednesdayEnd').value },
+                thursday: { start: document.getElementById('thursdayStart').value, end: document.getElementById('thursdayEnd').value },
+                friday: { start: document.getElementById('fridayStart').value, end: document.getElementById('fridayEnd').value },
+                saturday: { start: document.getElementById('saturdayStart').value, end: document.getElementById('saturdayEnd').value },
+                sunday: { start: document.getElementById('sundayStart').value, end: document.getElementById('sundayEnd').value }
+            };
+            try {
+                await fetch(`${API_BASE_URL}/workhours`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(newHours)
+                });
+                alert('Ish vaqti saqlandi!');
+            } catch (err) {
+                console.error('Failed to save work hours:', err);
+                alert('Ish vaqti saqlanmadi. Qayta urinib ko\'ring.');
+            }
+        });
+
+        // ==================== Active Status Toggle Helpers ====================
+        async function toggleRestaurantActive(id) {
+            try {
+                await fetch(`${API_BASE_URL}/restaurants/${id}/active`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({})
+                });
+                loadRestaurants();
+            } catch (err) {
+                console.error('Failed to toggle restaurant status:', err);
+            }
+        }
+
+        async function toggleDishActive(id) {
+            try {
+                await fetch(`${API_BASE_URL}/dishes/${id}/active`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({})
+                });
+                loadDishes();
+            } catch (err) {
+                console.error('Failed to toggle dish status:', err);
+            }
+        }
+
+        async function toggleContainerActive(id) {
+            try {
+                await fetch(`${API_BASE_URL}/containers/${id}/active`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({})
+                });
+                loadContainers();
+            } catch (err) {
+                console.error('Failed to toggle container status:', err);
+            }
+        }
+
+        // ==================== MAP SELECTION FOR RESTAURANTS ====================
+        // Global variables to store the Yandex map instance and selected coordinates
+        let yaMap;
+        let selectedCoords;
+
+        // Handle click on "Xaritadan tanlash" button to open the map modal
+        document.getElementById('selectOnMapBtn').addEventListener('click', function () {
+            openModal('mapModal');
+            // Initialize or re-center the Yandex map
+            const latVal = document.getElementById('restaurantLat').value.trim();
+            const lngVal = document.getElementById('restaurantLng').value.trim();
+            const centerLat = parseFloat(latVal.replace(',', '.')) || 41.311081;
+            const centerLng = parseFloat(lngVal.replace(',', '.')) || 69.240562;
+            if (!yaMap) {
+                if (typeof ymaps !== 'undefined') {
+                    ymaps.ready(function () {
+                        yaMap = new ymaps.Map('yandexMap', {
+                            center: [centerLat, centerLng],
+                            zoom: 12
+                        });
+                        let placemark;
+                        yaMap.events.add('click', function (e) {
+                            selectedCoords = e.get('coords');
+                            if (placemark) {
+                                placemark.geometry.setCoordinates(selectedCoords);
+                            } else {
+                                placemark = new ymaps.Placemark(selectedCoords, {}, {
+                                    preset: 'islands#redIcon'
+                                });
+                                yaMap.geoObjects.add(placemark);
+                            }
+                        });
+                    });
+                }
+            } else {
+                // Recenter map to current values
+                yaMap.setCenter([centerLat, centerLng], 12);
+            }
+        });
+
+        // Confirm selection: fill the latitude and longitude fields and close the modal
+        document.getElementById('confirmMapBtn').addEventListener('click', function () {
+            if (selectedCoords) {
+                const lat = selectedCoords[0].toFixed(7);
+                const lng = selectedCoords[1].toFixed(7);
+                document.getElementById('restaurantLat').value = lat;
+                document.getElementById('restaurantLng').value = lng;
+            }
+            closeModal('mapModal');
+        });
+
+        // Cancel map selection
+        document.getElementById('cancelMapBtn').addEventListener('click', function () {
+            closeModal('mapModal');
+        });
+    </script>
+</body>
+</html>
