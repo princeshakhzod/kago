@@ -1,0 +1,1449 @@
+<!doctype html>
+<html lang="uz">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hospital System</title>
+  <link rel="icon" type="image/x-icon" href="https://bmtm.uz/icon.png">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Patients Sheets</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+
+  <!-- Luckysheet CSS/JS -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/luckysheet/dist/plugins/css/pluginsCss.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/luckysheet/dist/plugins/plugins.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/luckysheet/dist/css/luckysheet.css">
+  <script src="https://cdn.jsdelivr.net/npm/luckysheet/dist/plugins/js/plugin.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/luckysheet/dist/luckysheet.umd.js"></script>
+
+  <!-- LuckyExcel: xlsx -> luckysheet data -->
+  <script src="https://cdn.jsdelivr.net/npm/luckyexcel/dist/luckyexcel.umd.js"></script>
+
+  <style>
+    :root { --brand:#b8b8b8 }
+    body { margin:0; font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue","Noto Sans","Liberation Sans",Arial,sans-serif,"Apple Color Emoji","Segoe UI Emoji","Segoe UI Symbol","Noto Color Emoji"; background:#212529; color:#b8b8b8 }
+    header { display:flex; gap:12px; align-items:center; justify-content:space-between; padding:12px; background:#212529ad; border-bottom:1px solid #5900ff; top:0; z-index:10 }
+    header h1 { font-size:26px; margin:0 8px 0 0; font-weight:700; color:var(--brand) }
+    header .row { display:flex; gap:8px; flex-wrap:wrap; align-items:center }
+    label { font-size:16px; color:#006afd }
+    select, input { height:41px; padding:0 10px; border:1px solid #cbd5e1; border-radius:8px; background:#292421 }
+    button { height:41px; padding:0 14px; border:1px solid #1625f700; background:#1625f700; color:rgba(252, 14, 14, 0); border-radius:5px; font-weight:700; cursor:pointer }
+    button.secondary { background:#002fff; color:#fdfeff }
+    button.third { background:#00ff15; color:#050380 }
+    button.four { background:#dbdbdb00; color:#0084ff }
+    button.yellow { background:#cc6300; color:#ffffff }
+    button.small { height:28px; padding:0 10px; font-size:12px; }
+    #sheet { height: calc(100dvh - 62px); }
+    
+    /* Patients list styles */
+    .patients-section { padding:20px; }
+    .patients-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; flex-wrap:wrap; gap:10px; }
+    .search-sort { display:flex; gap:15px; align-items:center; flex-wrap:wrap; }
+    .search-box { display:flex; gap:8px; }
+    .search-box input { width:250px; }
+    .sort-box select { width:200px; }
+    .patients-table { width:100%; background:#212529; border-radius:0px; overflow:hidden; box-shadow:20 30px 35px #ff000083; }
+    .table-header { display:grid; grid-template-columns:50px 1fr 1fr 1fr 100px; gap:10px; padding:15px; background:#0080ff83; font-weight:600; border-bottom:1px solid #a5a5a5; }
+    .table-row { display:grid; grid-template-columns:50px 1fr 1fr 1fr 100px; gap:10px; padding:15px; border-bottom:1px solid #a5a5a5; align-items:center; }
+    .table-row:hover { background:#292121; }
+    .table-row.selected { background:#0080ff83; }
+    .checkbox-cell { display:flex; justify-content:center; }
+    .pagination { display:flex; justify-content:center; align-items:center; gap:15px; margin-top:20px; }
+    .pagination button:disabled { opacity:0.5; cursor:not-allowed; }
+    .export-selected { margin-top:15px; display:flex; justify-content:flex-end; }
+    .hidden { display: none !important; }
+
+    /* Qidiruv paneli: input + tugma yonma-yon, oralig'i yo'q */
+    .search-box{
+      display:flex;
+      align-items:center;
+      gap:0;                  /* tugma inputga yopishib turadi */
+    }
+
+    /* Input konteyneri: ikonka uchun relative */
+    .search-wrap{
+      position:relative;
+      flex:1;                 /* kenglikni egallasin */
+      min-width:260px;
+    }
+
+    /* Font Awesome ikonkasini HTMLsiz chiqaramiz */
+    .search-wrap::before{
+      content:"\f002";        /* FA search */
+      font-family: "Font Awesome 6 Free","Font Awesome 5 Free"; 
+      font-weight:900;        /* fas */
+      position:absolute;
+      left:14px;
+      top:50%;
+      transform:translateY(-50%);
+      font-size:16px;
+      color:#9aa0a6;          /* ikonka rangi */
+      pointer-events:none;
+    }
+
+    /* Input ko'rinishi */
+    #searchInput{
+      height:41px;
+      width:100%;
+      padding-left:44px;      /* ikonka uchun joy */
+      padding-right:16px;
+      background:#1f2226;
+      border:1px solid #4c5a68;
+      color:#fff;             /* ichidagi harflar oq */
+      border-radius:5px 0 0 5px; /* chap tomoni yumaloq */
+      outline:none;
+    }
+    #searchInput::placeholder{ color:#9aa0a6; }
+    #searchInput:focus{ box-shadow:0 0 0 2px rgba(26,115,232,.25); }
+    /* Chrome/Edge/YaBrowser autofill oq/yashil fonini o‘chirib, dark fon bilan moslashtiramiz */
+    #searchInput:-webkit-autofill,
+    #searchInput:-webkit-autofill:hover,
+    #searchInput:-webkit-autofill:focus {
+      -webkit-text-fill-color: #fff !important;
+      box-shadow: 0 0 0px 1000px #1f2226 inset !important;   /* sizdagi dark fon bilan bir xil */
+      -webkit-box-shadow: 0 0 0px 1000px #1f2226 inset !important;
+      transition: background-color 9999s ease-in-out 0s;
+    }
+
+    /* Tugma inputga "yopishgan" bo'lsin */
+    #btnSearch{
+      height:41px;
+      padding:0 16px;
+      border:1px solid #1a73e8;
+      background:#1a73e8;     /* ko'k tugma */
+      color:#fff;
+      border-left:none;       /* chok ko'rinmasin */
+      border-radius:0 5px 5px 0; /* o'ng tomoni yumaloq */
+      cursor:pointer;
+    }
+    #btnSearch:hover{ filter:brightness(1.05); }
+    #btnSearch:active{ filter:brightness(.95); }
+
+    /* Kichik ekranlar uchun */
+    @media (max-width:600px){
+      .search-wrap{ min-width:0; }
+      #searchInput{ height:42px; }
+      #btnSearch{ height:42px; }
+    }
+
+    /* Saralash select ko‘rinishi (oq matn, dark fon, 44px balandlik) */
+    .sort-box select{
+      height:44px;                  /* qidiruv inputi bilan teng */
+      padding:0 14px;
+      border-radius:5px;         /* yumaloq */
+      background:#1f2226;           /* input foniga mos */
+      border:1px solid #4c5a68;
+      color:#fff;                   /* matn oq */
+      outline:none;
+      /* ixtiyoriy: native strelkani soddalashtirish */
+      -webkit-appearance:none;
+      -moz-appearance:none;
+      appearance:none;
+    }
+
+    /* Dropdown ichidagi elementlar ham oq/dark bo‘lsin */
+    .sort-box select option{
+      background:#1f2226;
+      color:#fff;
+    }
+
+    /* ========== Pagination (pro) ========== */
+    .pagination{
+      display:flex; justify-content:center; align-items:center;
+      margin-top:20px;
+    }
+
+    /* Ichki “kartochkalar” konteyneri */
+    .pager{
+      display:inline-flex;
+      background:#1f2226;                 /* dark */
+      border:1px solid #2e3338;           /* nozik chiziq */
+      border-radius:10px;
+      overflow:hidden;
+    }
+
+    /* Har bir tugma – bir xil “katak” */
+    .pager .page-btn{
+      min-width:44px; height:38px;
+      padding:0 12px;
+      border:none; border-right:1px solid #2e3338;
+      background:transparent;
+      color:#9aa0a6;                       /* matn kulrang */
+      font-weight:600;
+      cursor:pointer;
+    }
+    .pager .page-btn:last-child{ border-right:none; }
+
+    /* Hover – yengil yoritish */
+    .pager .page-btn:hover:not(.active):not(:disabled){
+      background:rgba(255,255,255,.06);
+    }
+
+    /* Aktiv sahifa – ko‘k fon, oq matn */
+    .pager .page-btn.active{
+      background:#1a73e8; color:#fff;
+    }
+
+    /* O‘chirib qo‘yilgan tugmalar */
+    .pager .page-btn:disabled{
+      opacity:.5; cursor:not-allowed;
+    }
+
+    /* “…” ellipsis ko‘rinishi (bosilmaydi) */
+    .pager .ellipsis{
+      pointer-events:none;
+    }
+
+  /* Universal FA tugma (ikonka + matn) */
+  .fa-btn{
+    position:relative;
+    padding-left:38px;                /* ikonka uchun joy */
+  }
+  .fa-btn::before{
+    position:absolute; left:14px; top:50%; transform:translateY(-50%);
+    font-family:"Font Awesome 6 Free"; font-weight:900; /* fas */
+    font-style:normal; display:inline-block;
+    content:"";                       /* quyida ikonlar bilan to'ldiramiz */
+    pointer-events:none;
+    font-size:14px; opacity:.95;
+  }
+
+  /* Ikonkalar xaritasi (FA6 Free kodlari) */
+  .fa-btn[data-fa="search"]::before   { content:"\f002"; }  /* magnifying-glass (fa-search) */
+  .fa-btn[data-fa="user-plus"]::before     { content:"\f067"; }  /* plus */
+  .fa-btn[data-fa="edit"]::before     { content:"\f044"; }  /* pen-to-square (edit) */
+  .fa-btn[data-fa="download"]::before { content:"\f019"; }  /* download */
+  .fa-btn[data-fa="trash"]::before    { content:"\f2ed"; }  /* trash */
+
+  /* Agar pager tugmalarida ham FA ishlatsangiz: */
+  .fa-btn[data-fa="chev-left"]::before   { content:"\f053"; } /* chevron-left  */
+  .fa-btn[data-fa="chev-right"]::before  { content:"\f054"; } /* chevron-right */
+  .fa-btn[data-fa="angles-left"]::before { content:"\f100"; } /* angles-left   */
+  .fa-btn[data-fa="angles-right"]::before{ content:"\f101"; } /* angles-right  */
+
+  .fa-btn[data-fa="home"]::before { content:"\f015"; }             /* fa-home */
+  .fa-btn[data-fa="key"]::before { content:"\f084"; }              /* fa-key */
+  .fa-btn[data-fa="list"]::before { content:"\f03a"; }             /* fa-list */
+  .fa-btn[data-fa="user"]::before { content:"\f007"; }
+  .fa-btn[data-fa="user-plus"]::before { content:"\f234"; }     
+  .fa-btn[data-fa="users-between-lines"]::before { content:"\e591"; }
+  .fa-btn[data-fa="file-excel"]::before { content:"\f1c3"; }             /* fa-list */
+  .fa-btn[data-fa="right-from-bracket"]::before { content:"\f2f5"; } /* fa-right-from-bracket (logout) */
+
+  /* 1) Primary tugma – Yangi bemor ko‘rinsin */
+  button.primary{
+    background:#1a73e8;
+    border:1px solid #1a73e8;
+    color:#fff;
+  }
+
+  /* 2) FA ikonka uchun joy: Qidirish tugmasida matn bilan aralashmasin */
+  #btnSearch.fa-btn{
+    padding-left:44px;   /* ikonka chapda 14px -> matn siqilmasin */
+  }
+
+  /* (ixtiyoriy) Kichik “Tahrirlash” tugmasi uchun ham joy kengroq bo‘lsin */
+  #patientsList .fa-btn[data-fa="edit"]{
+    padding-left:34px;
+  }
+
+  /* FA: Excel ikonkasi (fa-regular fa-file-arrow-down) */
+  .fa-btn[data-fa="file-arrow-down"]::before{
+    content: "\f1c3";                     /* file-arrow-down */
+    font-family: "Font Awesome 6 Free";
+    font-weight: 400;                      /* far (regular) */
+    color: #22c55e;                        /* Excel-style yashil; xohlasangiz olib tashlang */
+  }
+
+    /* Universal FA tugma (avvaldan bor bo‘lishi kerak) */
+    .fa-btn{
+      position:relative;
+      padding-left:38px; /* ikonka uchun joy */
+    }
+    .fa-btn::before{
+      position:absolute; left:14px; top:50%; transform:translateY(-50%);
+      font-family:"Font Awesome 6 Free";
+      font-weight:900;   /* default: fas (solid) */
+      font-style:normal; display:inline-block;
+      content:"";
+      pointer-events:none;
+      font-size:14px; opacity:.95;
+    }
+
+    /* Saqlash: fa-regular fa-floppy-disk */
+    .fa-btn[data-fa="floppy-disk"]::before{
+      content:"\f0c7";            /* check-square / floppy-disk */
+      font-weight:700;            /* far (regular) */
+      color:#ffffff;              /* ixtiyoriy: “tasdiq” yeshili */
+    }
+
+    /* Excel: fa-regular fa-file-arrow-down */
+    .fa-btn[data-fa="file-arrow-down"]::before{
+      content:"\f1c3";
+      font-weight:400;            /* far (regular) */
+      color:#050380;              /* ixtiyoriy: Excel yeshili */
+    }
+
+    /* (ixtiyoriy) joylashishni bir xil ushlab turish */
+    #btnSave.fa-btn{ padding-left:44px; }          /* matn siqilmasin */
+    #btnExportSelected.fa-btn{ padding-left:44px; }
+    #btnDownloadSelected.fa-btn{ padding-left:40px; }
+
+    /* ===================== Login / Admin / Profile styles ===================== */
+    /* LOGIN modal overlay */
+    #loginSection{
+      position: fixed;      /* ekranga yopishgan bo‘lsin */
+      inset: 0;             /* top/right/bottom/left = 0 */
+      display: grid;        /* markazga joylash */
+      place-items: center;  /* vertikal+gorizontal markaz */
+      background: rgba(0,0,0,.55); /* orqa fonni qoraytirish */
+      z-index: 9999;        /* hamma ustida tursin */
+    }
+
+    #loginForm{
+      display:flex;
+      flex-direction:column;
+      gap:14px;
+      background:#1f2226;
+      padding:30px;
+      border-radius:8px;
+      box-shadow:0 0 20px rgba(0,0,0,0.5);
+      width:320px;
+    }
+    #loginForm h2{
+      margin:0 0 10px 0;
+      color:#b8b8b8;
+      text-align:center;
+    }
+    #loginForm input{
+      height:40px;
+      padding:0 10px;
+      border:1px solid #4c5a68;
+      border-radius:5px;
+      background:#292421;
+      color:#fff;
+    }
+    #loginForm label{
+      font-size:14px;
+      color:#006afd;
+      display:flex;
+      align-items:center;
+      gap:8px;
+    }
+    #loginForm button{
+      height:40px;
+      background:#1a73e8;
+      color:#fff;
+      border:none;
+      border-radius:5px;
+      font-weight:700;
+      cursor:pointer;
+    }
+    #loginError{
+      color:#e01111;
+      font-size:14px;
+      text-align:center;
+    }
+    /* Users / Activities / Profile sections */
+    #usersSection, #activitiesSection, #profileSection{
+      padding:20px;
+    }
+    #usersSection table, #activitiesSection table{
+      width:100%;
+      border-collapse:collapse;
+    }
+    #usersSection th, #usersSection td, #activitiesSection th, #activitiesSection td{
+      border-bottom:1px solid #4c5a68;
+      padding:8px;
+      color:#b8b8b8;
+    }
+    #usersSection th, #activitiesSection th{
+      background:#0080ff83;
+    }
+    #userFormContainer{
+      margin-top:20px;
+      padding:20px;
+      background:#1f2226;
+      border:1px solid #4c5a68;
+      border-radius:8px;
+      display:flex;
+      flex-direction:column;
+      gap:12px;
+      max-width:400px;
+    }
+    #userFormContainer input, #userFormContainer select{
+      height:38px;
+      padding:0 10px;
+      border:1px solid #4c5a68;
+      border-radius:5px;
+      background:#292421;
+      color:#fff;
+    }
+    #userFormContainer button{
+      height:38px;
+      border:none;
+      border-radius:5px;
+      font-weight:600;
+      cursor:pointer;
+    }
+    #profileSection .form-group{
+      margin-bottom:14px;
+      display:flex;
+      flex-direction:column;
+    }
+    #profileSection label{
+      margin-bottom:4px;
+      color:#006afd;
+    }
+    #profileSection input{
+      height:38px;
+      padding:0 10px;
+      border:1px solid #4c5a68;
+      border-radius:5px;
+      background:#292421;
+      color:#fff;
+    }
+    #profileSection button{
+      height:38px;
+      margin-right:10px;
+      border:none;
+      border-radius:5px;
+      font-weight:600;
+      cursor:pointer;
+    }
+
+  </style>
+</head>
+<body>
+  <!-- Login Section (initially visible before authentication) -->
+  <div id="loginSection">
+    <form id="loginForm">
+      <h2><i class="fa-solid fa-user-doctor"> </i>  Tizimga kirish</h2>
+      <input type="text" id="loginLogin" name="username" placeholder="Login"
+            autocomplete="username" autofocus>
+
+      <input type="password" id="loginPassword" name="password" placeholder="Parol"
+            autocomplete="current-password">
+      <label><input type="checkbox" id="rememberMe"> Eslab qolish</label>
+      <button type="submit">Kirish</button>
+      <div id="loginError"></div>
+    </form>
+  </div>
+
+  <header id="mainHeader" class="hidden">
+    <h1><i class="fas fas-book-medical"></i> Bemorlar ro'yxati</h1>
+    <div id="adminControls" class="row">
+      <button id="btnHome" class="four fa-btn" data-fa="home">Bosh sahifa</button>
+      <button id="btnUserMgmt" class="four fa-btn" data-fa="key">Login &amp; Parollar</button>
+      <button id="btnActivities" class="four fa-btn" data-fa="list">Oxirgi faolliklar</button> 
+      <button id="btnProfile" class="four fa-btn" data-fa="user">Profilim</button>
+      <button id="btnLogout" class="four fa-btn" data-fa="right-from-bracket">Chiqish</button>
+    </div>
+  </header>
+
+  <!-- Patients List Section -->
+  <section id="patientsSection" class="patients-section hidden">
+    <div class="patients-header">
+      <div class="search-sort">
+        <div class="search-box">
+          <input
+            type="search"
+            id="searchInput"
+            name="site-search"
+            placeholder="Bemor ismi yoki telefon raqami..."
+            autocomplete="off"
+            autocapitalize="off"
+            spellcheck="false"
+            inputmode="search"
+          />
+          <button id="btnSearch" class="secondary fa-btn" data-fa="search">Qidirish</button>
+        </div>
+        <div class="sort-box">
+          <select id="sortSelect">
+            <option value="name_asc">- - Saralash - -</option>
+            <option value="name_asc">Ism (A-Z)</option>
+            <option value="name_desc">Ism (Z-A)</option>
+            <option value="date_desc">Sana (Yangi-Eski)</option>
+            <option value="date_asc">Sana (Eski-Yangi)</option>
+          </select>
+        </div>
+        <button id="btnNewPatient" class="primary fa-btn" data-fa="user-plus">Yangi bemor</button>
+      </div>
+    </div>
+
+    <div class="patients-table">
+      <div class="table-header">
+        <div class="checkbox-cell">
+          <input type="checkbox" id="selectAll">
+        </div>
+        <div>#</div>
+        <div>Ism</div>
+        <div>Telefon</div>
+        <div>Yaratilgan sana</div>
+      </div>
+      <div id="patientsList"></div>
+    </div>
+    <h1><i class="fas fa-download"> </i> Yuklab olish</h1>
+    <!-- Umumiy eksport (tanlanganlar uchun) -->
+    <button id="btnExportSelected" class="third fa-btn" data-fa="users-between-lines">
+      Umumiy statistika
+    </button>
+    <button id="btnExport" class="third fa-btn" data-fa="file-excel">
+      Bir kishilik statistika
+    </button>
+    <button id="btnDeleteSelected" class="yellow fa-btn" data-fa="trash">
+      O'chirish
+    </button>
+    <div class="pagination">
+      <div id="pager" class="pager"></div>
+    </div>
+
+  </section>
+
+  <!-- Admin Users Section -->
+  <section id="usersSection" class="hidden">
+    <h2>Administratorlar</h2>
+    <table id="usersTable">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Ism</th>
+          <th>Login</th>
+          <th>Rol</th>
+          <th>Amal</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+    <button id="btnAddUser" class="primary" style="margin-top:15px;">Yangi admin</button>
+    <div id="userFormContainer" class="hidden">
+      <h3 id="userFormTitle">Yangi admin qo'shish</h3>
+      <input type="text" id="userNameInput" placeholder="Ism va familiya">
+      <input type="text" id="userLoginInput" placeholder="Login">
+      <input type="password" id="userPasswordInput" placeholder="Parol">
+      <select id="userRoleSelect">
+        <option value="simple">Simple admin</option>
+        <option value="super">Super admin</option>
+      </select>
+      <div style="display:flex; gap:10px;">
+        <button id="userSaveBtn" class="third">Saqlash</button>
+        <button id="userCancelBtn" class="yellow">Bekor qilish</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Activities Section -->
+  <section id="activitiesSection" class="hidden">
+    <h2>Oxirgi faolliklar (7 kun)</h2>
+    <table id="activitiesTable">
+      <thead>
+        <tr>
+          <th>Vaqt</th>
+          <th>Admin</th>
+          <th>Harakat</th>
+          <th>Tafsilot</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </section>
+
+  <!-- Profile Section -->
+  <section id="profileSection" class="hidden">
+    <h2>Profilim</h2>
+    <div class="form-group">
+      <label for="profileName">Ism va familiya</label>
+      <input type="text" id="profileName">
+    </div>
+    <div class="form-group">
+      <label for="profileLogin">Login</label>
+      <input type="text" id="profileLogin">
+    </div>
+    <div class="form-group">
+      <label for="profilePassword">Yangi parol (ixtiyoriy)</label>
+      <input type="password" id="profilePassword">
+    </div>
+    <div style="display:flex; gap:10px;">
+      <button id="profileSaveBtn" class="third">Saqlash</button>
+      <button id="profileCancelBtn" class="yellow">Bekor qilish</button>
+    </div>
+  </section>
+
+  <!-- Sheets Section -->
+  <section id="sheetsSection" class="hidden">
+    <div class="row" style="padding:12px; background:#beb8b8; border-bottom:1px solid #1100ff;">
+      <label for="patientSelect">Bemor:</label>
+      <select id="patientSelect"></select>
+      <!-- Saqlash -->
+      <button id="btnSave" class="secondary fa-btn" data-fa="floppy-disk"> 
+        O'zgarishni saqlash
+      </button>
+      <button id="btnBackToList" class="secondary fa-btn" data-fa="chev-left">
+        Ro'yxatga qaytish
+      </button>
+
+      <!-- Tanlanganlar uchun export -->
+
+    </div>
+    <div id="sheet"></div>
+  </section>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const s = document.getElementById('searchInput');
+      if (s) s.value = '';
+      // Autofill kechikib tushsa ham tozalash:
+      setTimeout(() => { if (s && !s.matches(':focus')) s.value = ''; }, 400);
+    });
+
+    // Saralash o'zgarganda — agar foydalanuvchi hozir qidiruvda emasa, auto-qiymatni bekor qilamiz
+    document.getElementById('sortSelect').addEventListener('change', () => {
+      const s = document.getElementById('searchInput');
+      if (s && !s.matches(':focus')) s.value = ''; // “admin” kabi autofillni olib tashlaymiz
+      applyFiltersAndSort();
+      renderPatientsList();
+    });
+
+    // Hozir tanlangan bemor ID
+    let currentPatientId = null;
+    let allPatients = [];
+    let filteredPatients = [];
+    let currentPage = 1;
+    const patientsPerPage = 10;
+    let selectedPatients = new Set();
+
+    const headerEl = document.getElementById('mainHeader');
+    const sheetEl  = document.getElementById('sheet');
+
+    // Currently logged-in user info (null if not authenticated)
+    let currentUser = null;
+    // Temporary storage for editing users in the admin panel
+    let editingUserId = null;
+
+    // ------------------------- Authentication helpers -------------------------
+    // Check if there is a valid session on the server.  Returns the user
+    // information object { id, login, name, role } or null.
+    async function getSession() {
+      try {
+        const r = await fetch('/api/session');
+        if (!r.ok) return null;
+        return await r.json();
+      } catch (_) {
+        return null;
+      }
+    }
+
+    // Hide all main content sections except the login screen.  Patients list,
+    // sheets, users, activities and profile sections will be hidden.  The
+    // header is also hidden unless showHeader is true.
+    function hideAllMainSections() {
+      document.getElementById('patientsSection').classList.add('hidden');
+      document.getElementById('sheetsSection').classList.add('hidden');
+      document.getElementById('usersSection').classList.add('hidden');
+      document.getElementById('activitiesSection').classList.add('hidden');
+      document.getElementById('profileSection').classList.add('hidden');
+    }
+
+    // Show the login screen and hide everything else.  Called when no user is
+    // authenticated.
+    function showLogin() {
+      hideAllMainSections();
+      document.getElementById('loginSection').classList.remove('hidden');
+      headerEl.classList.add('hidden');
+    }
+
+    // Show the main patients list.  This will hide other sections and show
+    // header/navigation.  It also triggers a reload of the patients list.
+    function showMain() {
+      hideAllMainSections();
+      document.getElementById('loginSection').classList.add('hidden');
+      document.getElementById('patientsSection').classList.remove('hidden');
+      headerEl.classList.remove('hidden');
+
+      // 🔧 Yangi: filtrlash va tanlovlarni tozalash
+      const s = document.getElementById('searchInput');
+      if (s) s.value = '';                 // qidiruvni tozalash
+      const sort = document.getElementById('sortSelect');
+      if (sort) sort.value = 'name_asc';   // default saralash
+      selectedPatients.clear();            // tanlanganlar tozalanadi
+      const selAll = document.getElementById('selectAll');
+      if (selAll) selAll.checked = false;  // “select all” ni o‘chirish
+      currentPage = 1;                     // 1-sahifadan
+
+      sheetEl.style.height = 'calc(100dvh - 62px)';
+      loadPatientsList();                  // endi toza holatda yuklanadi
+
+      // Rol bo‘yicha tugmalarni ko‘rsatish
+      const isSuper = currentUser && currentUser.role === 'super';
+      document.getElementById('btnUserMgmt').style.display = isSuper ? '' : 'none';
+      document.getElementById('btnActivities').style.display = isSuper ? '' : 'none';
+    }
+
+    // Show the users management panel (super admin only).  Loads the list of
+    // administrators and displays the add/edit form when needed.
+    async function showUsersSection() {
+      hideAllMainSections();
+      document.getElementById('usersSection').classList.remove('hidden');
+      headerEl.classList.remove('hidden');
+      await renderUsersTable();
+      document.getElementById('userFormContainer').classList.add('hidden');
+    }
+
+    // Show the activities log (super admin only).  Fetches last 7 days of
+    // actions and renders them in a table.
+    async function showActivitiesSection() {
+      hideAllMainSections();
+      document.getElementById('activitiesSection').classList.remove('hidden');
+      headerEl.classList.remove('hidden');
+      try {
+        const r = await fetch('/api/actions');
+        if (!r.ok) throw new Error('Xatolik');
+        const data = await r.json();
+        const tbody = document.querySelector('#activitiesTable tbody');
+        tbody.innerHTML = '';
+        data.forEach(item => {
+          const tr = document.createElement('tr');
+          // Format time to Uzbekistan timezone and readable form
+          const date = new Date(item.time);
+          const timeStr = date.toLocaleString('uz-UZ', { timeZone:'Asia/Tashkent', hour12:false });
+          tr.innerHTML = `
+            <td>${timeStr}</td>
+            <td>${item.name || item.login}</td>
+            <td>${item.action}</td>
+            <td>${JSON.stringify(item.details || {})}</td>
+          `;
+          tbody.appendChild(tr);
+        });
+      } catch (e) {
+        const tbody = document.querySelector('#activitiesTable tbody');
+        tbody.innerHTML = '<tr><td colspan="4">Xatolik yuz berdi</td></tr>';
+      }
+    }
+
+    // Show the profile editing screen.  Loads current user info and allows
+    // updating name, login and password.
+    async function showProfileSection() {
+      hideAllMainSections();
+      document.getElementById('profileSection').classList.remove('hidden');
+      headerEl.classList.remove('hidden');
+      try {
+        const r = await fetch('/api/profile');
+        if (!r.ok) throw new Error('Xatolik');
+        const user = await r.json();
+        document.getElementById('profileName').value = user.name || '';
+        document.getElementById('profileLogin').value = user.login || '';
+        document.getElementById('profilePassword').value = '';
+      } catch (e) {
+        alert('Profilni yuklashda xatolik yuz berdi');
+      }
+    }
+
+    // Render the list of users in the admin panel.  Fetches the list from
+    // the server and populates the table body.
+    async function renderUsersTable() {
+      try {
+        const r = await fetch('/api/users');
+        if (!r.ok) throw new Error('Xatolik');
+        const users = await r.json();
+        const tbody = document.querySelector('#usersTable tbody');
+        tbody.innerHTML = '';
+        users.forEach(user => {
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td>${user.id}</td>
+            <td>${user.name}</td>
+            <td>${user.login}</td>
+            <td>${user.role}</td>
+            <td>
+              <button class="small secondary edit-user" data-id="${user.id}">Tahrir</button>
+              <button class="small yellow delete-user" data-id="${user.id}">O'chirish</button>
+            </td>
+          `;
+          tbody.appendChild(tr);
+        });
+      } catch (e) {
+        const tbody = document.querySelector('#usersTable tbody');
+        tbody.innerHTML = '<tr><td colspan="5">Xatolik yuz berdi</td></tr>';
+      }
+    }
+
+    // Reset the user form to default state
+    function resetUserForm() {
+      document.getElementById('userNameInput').value = '';
+      document.getElementById('userLoginInput').value = '';
+      document.getElementById('userPasswordInput').value = '';
+      document.getElementById('userRoleSelect').value = 'simple';
+    }
+    // UI holatini boshqarish
+    function showPatientsSection() {
+      // When returning to the list, simply show the main view
+      showMain();
+    }
+
+    function showSheetsSection() {
+      document.getElementById('patientsSection').classList.add('hidden');
+      document.getElementById('sheetsSection').classList.remove('hidden');
+      document.getElementById('btnBackToList')?.addEventListener('click', showPatientsSection);
+
+      // Hide header to give more space to the sheet
+      headerEl.classList.add('hidden');
+      sheetEl.style.height = '100dvh';
+    }
+
+    async function fetchJSON(url, opts) {
+      const r = await fetch(url, opts);
+      if (!r.ok) {
+        const t = await r.text().catch(()=> '');
+        throw new Error(`HTTP ${r.status}: ${t}`);
+      }
+      return r.json();
+    }
+
+    function renderPagination() {
+      const pager = document.getElementById('pager');
+      if (!pager) return;
+
+      const totalPages = Math.max(1, Math.ceil(filteredPatients.length / patientsPerPage));
+      currentPage = Math.min(Math.max(1, currentPage), totalPages);
+
+      // Yordamchi: tugma yasash
+      const mkBtn = (label, page, disabled = false, extra = '') => {
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.className = `page-btn ${extra}`.trim();
+        b.textContent = label;
+        b.disabled = !!disabled;
+        if (!disabled) {
+          b.addEventListener('click', () => {
+            currentPage = page;
+            renderPatientsList();
+          });
+        }
+        return b;
+      };
+
+      // 4 ta raqamdan iborat sirpanadigan oynacha
+      const windowSize = 3;
+      let start = currentPage;
+      let end = start + windowSize - 1;
+      if (end > totalPages) {
+        end = totalPages;
+        start = Math.max(1, end - windowSize + 1);
+      }
+
+      // Chizish
+      pager.innerHTML = '';
+      pager.appendChild(mkBtn('«', 1, currentPage === 1));
+      pager.appendChild(mkBtn('‹', Math.max(1, currentPage - 1), currentPage === 1));
+
+      for (let p = start; p <= end; p++) {
+        pager.appendChild(mkBtn(String(p), p, false, p === currentPage ? 'active' : ''));
+      }
+
+      pager.appendChild(mkBtn('›', Math.min(totalPages, currentPage + 1), currentPage === totalPages));
+      pager.appendChild(mkBtn('»', totalPages, currentPage === totalPages));
+    }
+
+    // Bemorlar ro'yxatini yuklash
+    async function loadPatientsList() {
+      try {
+        allPatients = await fetchJSON('/api/patients');
+        applyFiltersAndSort();
+        renderPatientsList();
+      } catch (e) {
+        console.error('Bemorlar ro\'yxatini yuklashda xatolik:', e);
+        alert('Bemorlar ro\'yxatini yuklashda xatolik yuz berdi');
+      }
+    }
+
+    // Filtrlash va saralash
+    function applyFiltersAndSort() {
+      const searchTerm = (document.getElementById('searchInput').value || '').toString().toLowerCase();
+      const sortValue  = document.getElementById('sortSelect').value;
+
+      filteredPatients = allPatients.filter(p => {
+        const name  = (p.name  || '').toString().toLowerCase();
+        const phone = (p.phone || '').toString().toLowerCase();
+        return name.includes(searchTerm) || phone.includes(searchTerm);
+      });
+
+      filteredPatients.sort((a, b) => {
+        switch (sortValue) {
+          case 'name_asc':  return (a.name || '').localeCompare(b.name || '');
+          case 'name_desc': return (b.name || '').localeCompare(a.name || '');
+          case 'date_asc':  return new Date(a.createdAt || 0) - new Date(b.createdAt || 0);
+          case 'date_desc': return new Date(b.createdAt || 0) - new Date(a.createdAt || 0);
+          case '':          // tanlanmagan — saralamaymiz
+          default:          return 0;
+        }
+      });
+
+      currentPage = 1;
+    }
+
+    // Bemorlar ro'yxatini chizish
+    function renderPatientsList() {
+      const patientsList = document.getElementById('patientsList');
+      const startIndex = (currentPage - 1) * patientsPerPage;
+      const endIndex = startIndex + patientsPerPage;
+      const pagePatients = filteredPatients.slice(startIndex, endIndex);
+      
+      patientsList.innerHTML = '';
+      
+      if (pagePatients.length === 0) {
+        patientsList.innerHTML = '<div class="table-row" style="text-align:center; grid-template-columns:1fr;">Hech qanday bemor topilmadi</div>';
+        return;
+      }
+      
+      pagePatients.forEach(patient => {
+        const row = document.createElement('div');
+        row.className = `table-row ${selectedPatients.has(patient.id) ? 'selected' : ''}`;
+        
+        const createdAt = new Date(patient.createdAt);
+        // Display timestamps in Uzbekistan/Tashkent timezone
+        const formattedDate = `${createdAt.toLocaleDateString('uz-UZ', { timeZone:'Asia/Tashkent' })} ${createdAt.toLocaleTimeString('uz-UZ', {hour: '2-digit', minute:'2-digit', timeZone:'Asia/Tashkent'})}`;
+        
+        row.innerHTML = `
+          <div class="checkbox-cell">
+            <input type="checkbox" class="patient-checkbox" value="${patient.id}" ${selectedPatients.has(patient.id) ? 'checked' : ''}>
+          </div>
+          <div>${patient.id}</div>
+          <div>${patient.name}</div>
+          <div>${patient.phone}</div>
+          <div>${formattedDate}</div>
+          <div>
+            <button class="small secondary fa-btn edit-patient" data-fa="edit" data-id="${patient.id}">Tahrirlash</button>
+          </div>
+        `;
+        
+        patientsList.appendChild(row);
+      });
+      
+      // Sahifa ma'lumotlari
+      renderPagination();
+
+    }
+
+  // Yangi bemor yaratish: endi prompt yo'q.
+  // Server ID beradi, biz darhol shuning sheet'ini ochamiz.
+  async function createNewPatient() {
+    try {
+      const { id } = await fetchJSON('/api/patients', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({}) // hech narsa yubormaymiz
+      });
+
+      // Ro'yxatni yangilab qo'yamiz (bo'sh name/phone bilan ham chiqadi)
+      await loadPatientsList();
+
+      // Darhol shu bemor jadvalini ochamiz
+      await editPatient(id); // showSheetsSection() + openSheetForPatient(id)
+    } catch (e) {
+      console.error('Yangi bemor yaratishda xatolik:', e);
+      alert('Yangi bemor yaratishda xatolik yuz berdi');
+    }
+  }
+
+    // Bemor ✎ Tahrirlash (jadvalni Tahrirlash)
+    async function editPatient(id) {
+      currentPatientId = id;
+      showSheetsSection();
+      await loadPatientSelect();
+      document.getElementById('patientSelect').value = String(id);
+      await openSheetForPatient(id);
+    }
+
+    // Bemor tanlash ro'yxatini yuklash
+    async function loadPatientSelect() {
+      const list = await fetchJSON('/api/patients');
+      const sel = document.getElementById('patientSelect');
+      sel.innerHTML = '';
+      if (!Array.isArray(list) || list.length === 0) {
+        const opt = document.createElement('option');
+        opt.value = '';
+        opt.textContent = '— Bemor tanlanmagan —';
+        sel.appendChild(opt);
+        return;
+      }
+      for (const p of list) {
+        const opt = document.createElement('option');
+        opt.value = String(p.id);
+        opt.textContent = `${p.id}. ${p.name} (${p.phone})`;
+        sel.appendChild(opt);
+      }
+      if (currentPatientId) sel.value = String(currentPatientId);
+    }
+
+    async function openSheetForPatient(id) {
+      if (!id) return;
+      currentPatientId = id;
+      const { url } = await fetchJSON(`/api/patients/${id}/sheet`);
+      // XLSX faylni Luckysheetga import qilish
+      LuckyExcel.transformExcelToLuckyByUrl(url, `patient_${id}.xlsx`, (exportJson) => {
+        if (!exportJson.sheets || !exportJson.sheets.length) {
+          alert('Fayl bo‘sh yoki o‘qilmadi');
+          return;
+        }
+        // Agar avvalgi luckysheet bor bo'lsa tozalaymiz
+        const container = document.getElementById('sheet');
+        container.innerHTML = '';
+        luckysheet.create({
+          container: 'sheet',
+          showinfobar: false,
+          data: exportJson.sheets,
+          title: exportJson.info?.name || `Patient ${id}`,
+          lang: 'en' // uz lokalizatsiya hozircha yo'q
+        });
+      });
+    }
+
+    async function saveCurrent() {
+        if (!currentPatientId) { alert('Avval bemorni tanlang'); return; }
+
+        // 1) force.json'ni bir marta yoki har safar yangilash
+        if (FORCE_RULES === null) {
+        await loadForceRules();
+        }
+
+        // 2) Tekshiruv
+        const missing = findMissingRequiredCells(); // [] yoki ["A7","B9",...]
+        if (missing.length > 0) {
+        const msg = "Quyidagi katak(lar) bo'sh:\n  - " + missing.join('\n  - ')
+                    + "\n\nBaribir saqlaymi?";
+        const proceed = confirm(msg);
+        if (!proceed) return; // bekor qilindi
+        }
+
+        // 3) Saqlash (avvalgidek)
+        const sheets = luckysheet.getAllSheets();
+        await fetchJSON(`/api/patients/${currentPatientId}/save`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sheets })
+        });
+        alert('Saqlandi!');
+        try {
+          await loadPatientsList();
+          await loadPatientSelect(); // yuqoridagi selectdagi ko'rinish ham yangilansin
+        } catch (_) {}
+    }
+
+    // "Bir kishilik statistika" — faqat tanlangan bitta bemor uchun
+    function exportCurrent() {
+      const count = selectedPatients.size;
+
+      if (count === 1) {
+        const id = Array.from(selectedPatients)[0];
+        window.location.href = `/api/patients/${id}/download`;
+        return;
+      }
+
+      if (count > 1) {
+        alert("Bir kishilik statistika faqat bitta bemor uchun. Ko‘proq bemorlar statistikasi uchun “Umumiy statistika” tugmasidan foydalaning.");
+        return;
+      }
+
+      // count === 0
+      alert("Avval ro‘yxatdan bitta bemorni tanlang.");
+    }
+
+
+    // Tanlangan bemorlarni Excelga export qilish
+    async function exportSelectedPatients() {
+      if (selectedPatients.size === 0) {
+        alert('Hech qanday bemor tanlanmagan');
+        return;
+      }
+      
+      try {
+        // Serverda export qilish API'si bo'lishi kerak
+        // Bu yerda faqat tanlangan ID'larni serverga yuboramiz
+        const response = await fetch('/api/patients/export', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ patientIds: Array.from(selectedPatients) })
+        });
+        
+        if (!response.ok) {
+          throw new Error('Export failed');
+        }
+        
+        // Faylni yuklab olish
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `patients_${new Date().toISOString().split('T')[0]}.xlsx`;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+        
+      } catch (e) {
+        console.error('Export qilishda xatolik:', e);
+        alert('Export qilishda xatolik yuz berdi');
+      }
+    }
+
+    // --- FORCE RULES ----
+    let FORCE_RULES = null;
+
+    async function deleteSelectedPatients() {
+      const ids = Array.from(selectedPatients);
+      if (ids.length === 0) {
+        alert("Avval bemorlarni tanlang.");
+        return;
+      }
+
+      const msg = ids.length === 1
+        ? "Rostdan ham siz 1 ta bemor ma'lumotini butunlay o'chirmoqchimisiz?\nBu amalni qaytarib bo'lmaydi."
+        : `Rostdan ham siz ${ids.length} ta bemor ma'lumotlarini butunlay o'chirmoqchimisiz?\nBu amalni qaytarib bo'lmaydi.`;
+      if (!confirm(msg)) return;
+
+      try {
+        const r = await fetch('/api/patients/bulk-delete', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ids })
+        });
+        if (!r.ok) {
+          const t = await r.text().catch(()=> '');
+          throw new Error(`HTTP ${r.status}: ${t}`);
+        }
+        const { deletedIds = [] } = await r.json();
+
+        // Tanlovni tozalaymiz va ro'yxatni yangilaymiz
+        deletedIds.forEach(id => selectedPatients.delete(id));
+        const selAll = document.getElementById('selectAll');
+        if (selAll) selAll.checked = false;
+        await loadPatientsList();
+
+        alert(`${deletedIds.length} ta bemor o'chirildi.`);
+      } catch (e) {
+        console.error('Bulk delete error:', e);
+        alert("O'chirishda xatolik yuz berdi.");
+      }
+    }
+
+    async function loadForceRules() {
+        try {
+        const r = await fetch('/force.json', { cache: 'no-store' });
+        if (!r.ok) return; // force.json bo'lmasa ham ishlayveradi
+        FORCE_RULES = await r.json();
+        } catch (_) {
+        FORCE_RULES = null;
+        }
+    }
+
+    // A1 -> (rowIndex, colIndex)  [0-based]
+    function a1ToRC(a1) {
+        if (!a1 || typeof a1 !== 'string') return null;
+        const m = a1.trim().match(/^([A-Za-z]+)(\d+)$/);
+        if (!m) return null;
+        const colLetters = m[1].toUpperCase();
+        const rowNum = parseInt(m[2], 10);
+        if (!rowNum || rowNum < 1) return null;
+
+        // convert letters to number: A=1 ... Z=26, AA=27, ...
+        let colNum = 0;
+        for (let i = 0; i < colLetters.length; i++) {
+        colNum = colNum * 26 + (colLetters.charCodeAt(i) - 64);
+        }
+        return { r: rowNum - 1, c: colNum - 1 };
+    }
+
+    // Luckysheet sheet obyektidan (r,c) dagi ko'rinadigan qiymatni olish
+    function getDisplayFromSheet(sheet, r, c) {
+        // Prefer data[][] bo'lsa
+        if (Array.isArray(sheet.data) && sheet.data[r] && sheet.data[r][c]) {
+        const cell = sheet.data[r][c];
+        const v = (cell && typeof cell === 'object' && 'v' in cell) ? cell.v : cell;
+        if (v == null) return '';
+        if (typeof v === 'object') {
+            if (v.m != null) return String(v.m);
+            if (v.v != null) return String(v.v);
+            return '';
+        }
+        return String(v);
+        }
+        // Agar data yo'q — celldata'dan qidiramiz
+        if (Array.isArray(sheet.celldata)) {
+        const found = sheet.celldata.find(item => item.r === r && item.c === c);
+        if (found && found.v) {
+            const v = found.v;
+            if (v.m != null) return String(v.m);
+            if (v.v != null) return String(v.v);
+        }
+        }
+        return '';
+    }
+
+    // Aktiv sheet'ni olish (status===1 bo'lsa, yo'q bo'lsa birinchisi)
+    function getActiveSheet(all) {
+        return all.find(s => s.status === 1) || all[0];
+    }
+
+    // Majburiy kataklar ro'yxatini (aktiv sheet nomiga qarab) olish
+    function getRequiredCellsFor(activeSheetName) {
+        if (!FORCE_RULES) return [];
+        // format B: sheet nomlari
+        if (FORCE_RULES && !Array.isArray(FORCE_RULES) && !Array.isArray(FORCE_RULES.required)) {
+        const arr = FORCE_RULES[activeSheetName];
+        if (Array.isArray(arr)) return arr;
+        }
+        // format A: { required: [...] }
+        if (Array.isArray(FORCE_RULES.required)) return FORCE_RULES.required;
+        return [];
+    }
+
+    // Saqlashdan oldin tekshirish: bo'sh bo'lgan required kataklarni qaytaradi
+    function findMissingRequiredCells() {
+        if (!FORCE_RULES) return [];
+        const sheets = luckysheet.getAllSheets();
+        const active = getActiveSheet(sheets);
+        const required = getRequiredCellsFor(active.name || active.title || 'Sheet1');
+
+        const missing = [];
+        for (const a1 of required) {
+        const rc = a1ToRC(a1);
+        if (!rc) continue;
+        const val = getDisplayFromSheet(active, rc.r, rc.c).trim();
+        if (val === '') missing.push(a1);
+        }
+        return missing;
+    }
+    
+    // Eventlar
+    document.getElementById('btnNewPatient').addEventListener('click', createNewPatient);
+    document.getElementById('btnSave').addEventListener('click', saveCurrent);
+    document.getElementById('btnExport').addEventListener('click', exportCurrent);
+    document.getElementById('btnSearch').addEventListener('click', () => {
+      applyFiltersAndSort();
+      renderPatientsList();
+    });
+    document.getElementById('searchInput').addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') {
+        applyFiltersAndSort();
+        renderPatientsList();
+      }
+    });
+    document.getElementById('sortSelect').addEventListener('change', () => {
+      applyFiltersAndSort();
+      renderPatientsList();
+    });
+
+    document.getElementById('selectAll').addEventListener('change', (e) => {
+      const checkboxes = document.querySelectorAll('.patient-checkbox');
+      if (e.target.checked) {
+        checkboxes.forEach(cb => {
+          cb.checked = true;
+          selectedPatients.add(parseInt(cb.value));
+        });
+      } else {
+        checkboxes.forEach(cb => {
+          cb.checked = false;
+          selectedPatients.delete(parseInt(cb.value));
+        });
+      }
+      renderPatientsList();
+    });
+    document.getElementById('btnExportSelected').addEventListener('click', exportSelectedPatients);
+    document.getElementById('btnDeleteSelected').addEventListener('click', deleteSelectedPatients);
+    document.getElementById('patientSelect').addEventListener('change', (e) => {
+      const id = e.target.value;
+      if (id) openSheetForPatient(parseInt(id, 10));
+    });
+
+    // Delegatsiya orqali ✎ Tahrirlash tugmalarini boshqarish
+    document.getElementById('patientsList').addEventListener('click', (e) => {
+      if (e.target.classList.contains('edit-patient')) {
+        const patientId = parseInt(e.target.getAttribute('data-id'), 10);
+        editPatient(patientId);
+      }
+    });
+
+    // Delegatsiya orqali checkbox'larni boshqarish
+    document.getElementById('patientsList').addEventListener('change', (e) => {
+      if (e.target.classList.contains('patient-checkbox')) {
+        const patientId = parseInt(e.target.value, 10);
+        if (e.target.checked) {
+          selectedPatients.add(patientId);
+        } else {
+          selectedPatients.delete(patientId);
+          document.getElementById('selectAll').checked = false;
+        }
+        renderPatientsList();
+      }
+    });
+    // ======================= Authentication & Navigation Events =======================
+    // Login form submission
+    document.getElementById('loginForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const login = document.getElementById('loginLogin').value.trim();
+      const password = document.getElementById('loginPassword').value;
+      const remember = document.getElementById('rememberMe').checked;
+      document.getElementById('loginError').textContent = '';
+      try {
+        const r = await fetch('/api/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ login, password, remember })
+        });
+        if (!r.ok) {
+          const err = await r.json().catch(() => ({ error:'Xatolik' }));
+          document.getElementById('loginError').textContent = err.error || 'Login xatosi';
+          return;
+        }
+        const data = await r.json();
+        currentUser = data;
+        // Clear form
+        document.getElementById('loginLogin').value = '';
+        document.getElementById('loginPassword').value = '';
+        document.getElementById('rememberMe').checked = false;
+        showMain();
+      } catch (err) {
+        document.getElementById('loginError').textContent = 'Server bilan bog‘lanishda xatolik';
+      }
+    });
+
+    // Navigation buttons
+    document.getElementById('btnLogout').addEventListener('click', async () => {
+      try {
+        await fetch('/api/logout', { method:'POST' });
+      } catch (_) {}
+      currentUser = null;
+      showLogin();
+    });
+    document.getElementById('btnUserMgmt').addEventListener('click', showUsersSection);
+    document.getElementById('btnActivities').addEventListener('click', showActivitiesSection);
+    document.getElementById('btnProfile').addEventListener('click', showProfileSection);
+    // Bosh sahifa
+    document.getElementById('btnHome').addEventListener('click', showMain);
+
+
+    // Add new user
+    document.getElementById('btnAddUser').addEventListener('click', () => {
+      editingUserId = null;
+      resetUserForm();
+      document.getElementById('userFormTitle').textContent = "Yangi admin qo'shish";
+      document.getElementById('userFormContainer').classList.remove('hidden');
+    });
+    // Cancel user form
+    document.getElementById('userCancelBtn').addEventListener('click', () => {
+      document.getElementById('userFormContainer').classList.add('hidden');
+    });
+    // Save user form
+    document.getElementById('userSaveBtn').addEventListener('click', async () => {
+      const name = document.getElementById('userNameInput').value.trim();
+      const login = document.getElementById('userLoginInput').value.trim();
+      const password = document.getElementById('userPasswordInput').value;
+      const role = document.getElementById('userRoleSelect').value;
+      if (!name || !login || !password || !role) {
+        alert('Barcha maydonlarni to‘ldiring');
+        return;
+      }
+      try {
+        let r;
+        if (editingUserId) {
+          r = await fetch(`/api/users/${editingUserId}`, {
+            method:'PUT',
+            headers:{ 'Content-Type':'application/json' },
+            body: JSON.stringify({ name, login, password, role })
+          });
+        } else {
+          r = await fetch('/api/users', {
+            method:'POST',
+            headers:{ 'Content-Type':'application/json' },
+            body: JSON.stringify({ name, login, password, role })
+          });
+        }
+        const resp = await r.json().catch(() => ({}));
+        if (!r.ok) {
+          alert(resp.error || 'Xatolik');
+        } else {
+          document.getElementById('userFormContainer').classList.add('hidden');
+          await renderUsersTable();
+        }
+      } catch (err) {
+        alert('Server xatosi');
+      }
+    });
+    // Edit/Delete user actions via delegation
+    document.getElementById('usersTable').addEventListener('click', async (e) => {
+      const id = e.target.getAttribute('data-id');
+      if (!id) return;
+      if (e.target.classList.contains('edit-user')) {
+        // populate form for editing
+        editingUserId = parseInt(id, 10);
+        // fetch users to populate
+        try {
+          const r = await fetch('/api/users');
+          const users = await r.json();
+          const u = users.find(u => u.id === editingUserId);
+          if (!u) return;
+          document.getElementById('userNameInput').value = u.name || '';
+          document.getElementById('userLoginInput').value = u.login || '';
+          document.getElementById('userPasswordInput').value = '';
+          document.getElementById('userRoleSelect').value = u.role || 'simple';
+          document.getElementById('userFormTitle').textContent = 'Adminni tahrirlash';
+          document.getElementById('userFormContainer').classList.remove('hidden');
+        } catch (_) {}
+      } else if (e.target.classList.contains('delete-user')) {
+        const confirmDel = confirm('Rostdan ham bu adminni o‘chirmoqchimisiz?');
+        if (!confirmDel) return;
+        try {
+          const r = await fetch(`/api/users/${id}`, { method:'DELETE' });
+          const data = await r.json().catch(() => ({}));
+          if (!r.ok) {
+            alert(data.error || 'Xatolik');
+          } else {
+            await renderUsersTable();
+          }
+        } catch (_) {
+          alert('Server xatosi');
+        }
+      }
+    });
+
+    // Profile actions
+    document.getElementById('profileCancelBtn').addEventListener('click', () => {
+      showMain();
+    });
+    document.getElementById('profileSaveBtn').addEventListener('click', async () => {
+      const name = document.getElementById('profileName').value.trim();
+      const login = document.getElementById('profileLogin').value.trim();
+      const password = document.getElementById('profilePassword').value;
+      try {
+        const r = await fetch('/api/profile', {
+          method:'PUT',
+          headers:{ 'Content-Type':'application/json' },
+          body: JSON.stringify({ name, login, password })
+        });
+        const data = await r.json().catch(() => ({}));
+        if (!r.ok) {
+          alert(data.error || 'Xatolik');
+        } else {
+          alert('Ma’lumotlar yangilandi');
+          currentUser.name = data.name;
+          currentUser.login = data.login;
+          showMain();
+        }
+      } catch (_) {
+        alert('Server xatosi');
+      }
+    });
+
+    // Application initialization: check session and decide which view to show
+    (async function initApp() {
+      currentUser = await getSession();
+      if (!currentUser) {
+        showLogin();
+      } else {
+        showMain();
+      }
+    })();
+  </script>
+</body>
+</html>
